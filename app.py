@@ -27,19 +27,56 @@ app = Flask(__name__)
 client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
 def clean_json_response(raw_text: str) -> dict:
-    """Gemini 응답에서 마크다운 코드 블록 등을 제거하고 순수 JSON 딕셔너리로 안전하게 파싱"""
-    text = raw_text.strip()
+    """Gemini 응답에서 마크다운 코드 블록, 후행 쉼표, 이스케이프 오류 등을 복구하여 완벽한 JSON 딕셔너리로 안전하게 파싱"""
+    text = (raw_text or "").strip()
     if text.startswith("```"):
         text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
         text = re.sub(r"\s*```$", "", text)
+
+    # 1차 시도: 표준 json.loads
     try:
         return json.loads(text)
-    except json.JSONDecodeError:
-        # 혹시 JSON 앞뒤에 부가 텍스트가 섞여있을 경우 중괄호 매칭
-        match = re.search(r"(\{.*\})", text, re.DOTALL)
-        if match:
-            return json.loads(match.group(1))
-        raise
+    except Exception as e1:
+        logging.warning(f"⚠️ 1차 표준 JSON 파싱 실패 ({e1}), 복구 알고리즘 시작...")
+
+    # 2차 시도: 중괄호 영역 추출 및 후행 쉼표(trailing comma) 정규식 정제
+    candidate = text
+    match = re.search(r"(\{.*\})", text, re.DOTALL)
+    if match:
+        candidate = match.group(1)
+
+    try:
+        # trailing comma 제거 (예: ,} -> } 또는 ,] -> ])
+        sanitized = re.sub(r",\s*([\]}])", r"\1", candidate)
+        return json.loads(sanitized)
+    except Exception as e2:
+        logging.warning(f"⚠️ 2차 후행 쉼표 정제 실패 ({e2}), json_repair 복구 시도...")
+
+    # 3차 시도: json_repair 라이브러리를 통한 문법/따옴표/쉼표 자동 복구
+    try:
+        from json_repair import repair_json
+        repaired = repair_json(candidate, return_objects=True)
+        if isinstance(repaired, dict) and "questions" in repaired:
+            logging.info("🎉 json_repair로 손상된 JSON 파싱 성공!")
+            return repaired
+        elif isinstance(repaired, dict):
+            logging.info("🎉 json_repair로 딕셔너리 복구 성공!")
+            return repaired
+        elif isinstance(repaired, list) and len(repaired) > 0 and isinstance(repaired[0], dict):
+            logging.info("🎉 json_repair로 리스트 형태 JSON 복구 성공!")
+            return {"questions": repaired}
+    except Exception as e3:
+        logging.error(f"❌ json_repair 복구 실패: {e3}")
+
+    # 4차 시도: 전체 원문 텍스트 대상 json_repair
+    from json_repair import repair_json
+    final_res = repair_json(text, return_objects=True)
+    if isinstance(final_res, dict):
+        return final_res
+    elif isinstance(final_res, list):
+        return {"questions": final_res}
+
+    raise ValueError(f"JSON 구조를 복구할 수 없습니다: {text[:200]}...")
 
 # 3. 라우트 정의
 @app.route("/")
@@ -310,6 +347,11 @@ def generate_exam():
     }}
   ]
 }}
+
+[JSON 출력 필수 규칙]
+1. 유효한 단 하나의 JSON 객체만을 출력하세요. 백틱이나 불필요한 설명은 금지합니다.
+2. 문자열 내부(질문, 보기, 해설 등)에서 회사명이나 인용구를 쓸 때는 큰따옴표(") 대신 반드시 작은따옴표(')를 사용하세요. (예: '(주)대한'처럼 작성)
+3. 배열이나 객체의 마지막 원소 뒤에 쉼표(Trailing comma)를 절대 붙이지 마세요.
 """
 
         response = client.models.generate_content(
@@ -317,7 +359,8 @@ def generate_exam():
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.2,
-                response_mime_type="application/json"
+                response_mime_type="application/json",
+                max_output_tokens=8192
             )
         )
 
