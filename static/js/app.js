@@ -29,13 +29,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const questionTypesSelect = document.getElementById("questionTypes");
     const modeRadios = document.querySelectorAll('input[name="mode"]');
 
-    // PDF 및 URL 퀵 임포트 요소
+    // PDF 및 URL 퀵 임포트 요소 (강의자료용)
     const pdfFileInput = document.getElementById("pdfFileInput");
     const toggleUrlBtn = document.getElementById("toggleUrlBtn");
     const urlInputRow = document.getElementById("urlInputRow");
     const webUrlInput = document.getElementById("webUrlInput");
     const fetchUrlBtn = document.getElementById("fetchUrlBtn");
     const importStatusPill = document.getElementById("importStatusPill");
+
+    // 참여 웹(dongwonlab 등) 퀴즈 족보 퀵 임포트 요소
+    const togglePracticeUrlBtn = document.getElementById("togglePracticeUrlBtn");
+    const practiceUrlInputRow = document.getElementById("practiceUrlInputRow");
+    const practiceWebUrlInput = document.getElementById("practiceWebUrlInput");
+    const fetchPracticeUrlBtn = document.getElementById("fetchPracticeUrlBtn");
+    const practiceImportStatusPill = document.getElementById("practiceImportStatusPill");
 
     // 시험 화면 요소
     const examSubjectPill = document.getElementById("examSubjectPill");
@@ -176,13 +183,24 @@ document.addEventListener("DOMContentLoaded", () => {
                     throw new Error(data.error || "웹페이지 추출 실패");
                 }
 
-                if (lectureNotesInput.value.trim()) {
-                    lectureNotesInput.value += `\n\n[웹 링크 추출: ${data.title}]\n` + data.text;
+                if (data.is_dongwonlab) {
+                    if (practiceProblemsInput.value.trim()) {
+                        practiceProblemsInput.value += `\n\n[웹 퀴즈 족보: ${data.title}]\n` + data.text;
+                    } else {
+                        practiceProblemsInput.value = `[웹 퀴즈 족보: ${data.title}]\n` + data.text;
+                    }
+                    if (data.subject && subjectNameInput) {
+                        subjectNameInput.value = data.subject;
+                    }
+                    showImportStatus(`🎉 동원랩 1~5주차 퀴즈 15문항 족보 추출 성공! 족보 창에 자동 등록되었습니다.`, "success");
                 } else {
-                    lectureNotesInput.value = `[웹 링크 추출: ${data.title}]\n` + data.text;
+                    if (lectureNotesInput.value.trim()) {
+                        lectureNotesInput.value += `\n\n[웹 링크 추출: ${data.title}]\n` + data.text;
+                    } else {
+                        lectureNotesInput.value = `[웹 링크 추출: ${data.title}]\n` + data.text;
+                    }
+                    showImportStatus(`✅ 웹 링크 추출 완료! (${data.title})`, "success");
                 }
-
-                showImportStatus(`✅ 웹 링크 추출 완료! (${data.title})`, "success");
                 urlInputRow.classList.add("hidden");
                 webUrlInput.value = "";
             } catch (err) {
@@ -192,6 +210,82 @@ document.addEventListener("DOMContentLoaded", () => {
                 fetchUrlBtn.textContent = "본문 추출";
             }
         });
+    }
+
+    // 4-3. 참여 웹 퀴즈 족보 링크 추출 핸들러 (dongwonlab.com 등)
+    if (togglePracticeUrlBtn && practiceUrlInputRow) {
+        togglePracticeUrlBtn.addEventListener("click", () => {
+            practiceUrlInputRow.classList.toggle("hidden");
+            if (!practiceUrlInputRow.classList.contains("hidden")) {
+                practiceWebUrlInput.value = "http://dongwonlab.com";
+                practiceWebUrlInput.focus();
+            }
+        });
+    }
+
+    if (fetchPracticeUrlBtn && practiceWebUrlInput) {
+        fetchPracticeUrlBtn.addEventListener("click", async () => {
+            const url = practiceWebUrlInput.value.trim();
+            if (!url) {
+                alert("교수님 참여 웹 주소를 입력해 주세요 (예: http://dongwonlab.com)");
+                return;
+            }
+
+            fetchPracticeUrlBtn.disabled = true;
+            fetchPracticeUrlBtn.textContent = "추출 중...";
+            showPracticeImportStatus("🔗 참여 웹사이트 연결 및 퀴즈 족보 분석 중...", "loading");
+
+            try {
+                const resp = await fetch("/api/extract-url", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ url: url })
+                });
+                const data = await resp.json();
+
+                if (!resp.ok || !data.success) {
+                    throw new Error(data.error || "퀴즈 족보 추출 실패");
+                }
+
+                if (practiceProblemsInput.value.trim()) {
+                    practiceProblemsInput.value += `\n\n[추출 족보: ${data.title}]\n` + data.text;
+                } else {
+                    practiceProblemsInput.value = `[추출 족보: ${data.title}]\n` + data.text;
+                }
+
+                if (data.subject && subjectNameInput) {
+                    subjectNameInput.value = data.subject;
+                }
+
+                // 족보 적중 모드 자동 선택
+                const hitFocusRadio = document.querySelector('input[name="mode"][value="hit_focus"]');
+                if (hitFocusRadio) {
+                    hitFocusRadio.checked = true;
+                    document.querySelectorAll(".radio-card").forEach(c => c.classList.remove("active"));
+                    hitFocusRadio.closest(".radio-card").classList.add("active");
+                }
+
+                showPracticeImportStatus(`🎉 ${data.title} 추출 완료! 족보 적중 모드가 활성화되었습니다.`, "success");
+                practiceUrlInputRow.classList.add("hidden");
+            } catch (err) {
+                showPracticeImportStatus(`❌ 족보 추출 오류: ${err.message}`, "error");
+            } finally {
+                fetchPracticeUrlBtn.disabled = false;
+                fetchPracticeUrlBtn.textContent = "퀴즈 족보 추출";
+            }
+        });
+    }
+
+    function showPracticeImportStatus(msg, type) {
+        if (!practiceImportStatusPill) return;
+        practiceImportStatusPill.textContent = msg;
+        practiceImportStatusPill.className = `import-status-pill ${type}`;
+        practiceImportStatusPill.classList.remove("hidden");
+        if (type === "success") {
+            setTimeout(() => {
+                practiceImportStatusPill.classList.add("hidden");
+            }, 6000);
+        }
     }
 
     function showImportStatus(msg, type) {

@@ -94,6 +94,22 @@
                                 <p>교수님이 웹에 올리신 퀴즈와 정답을 그대로 복사해 넣으세요.</p>
                             </div>
                         </div>
+
+                        <!-- 참여 웹 퀴즈 링크 자동 추출 툴바 -->
+                        <div class="quick-import-toolbar">
+                            <button type="button" id="togglePracticeUrlBtn" class="btn-import-url" title="교수님 참여 웹페이지(예: dongwonlab.com)에서 퀴즈 자동 가져오기">
+                                <span>🔗 교수님 참여 웹 링크 가져오기 (dongwonlab 등)</span>
+                            </button>
+                        </div>
+
+                        <!-- 참여 웹 링크 입력 팝업 바 (토글) -->
+                        <div id="practiceUrlInputRow" class="url-input-row hidden">
+                            <input type="url" id="practiceWebUrlInput" placeholder="http://dongwonlab.com 또는 학생 모드 주소 입력">
+                            <button type="button" id="fetchPracticeUrlBtn" class="btn-fetch-url">퀴즈 족보 추출</button>
+                        </div>
+
+                        <div id="practiceImportStatusPill" class="import-status-pill hidden"></div>
+
                         <textarea id="practiceProblems" class="exam-textarea" rows="8" placeholder="예시:&#10;[연습문제 1] CPU 내부에서 다음 실행할 명령어의 주소를 보관하는 레지스터는?&#10;정답: 프로그램 카운터(PC, Program Counter)&#10;&#10;[연습문제 2] 캐시 메모리의 사상 방식 3가지를 쓰시오.&#10;정답: 직접 사상, 연관 사상, 세트 연관 사상&#10;&#10;[연습문제 3] 다음 중 비휘발성 메모리에 해당하는 것은? 1.DRAM 2.SRAM 3.ROM 4.캐시&#10;정답: 3. ROM"></textarea>
                     </div>
                 </div>

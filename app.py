@@ -114,6 +114,39 @@ def extract_url():
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
+
+        # dongwonlab.com 특화 처리: API를 통해 1~5주차 실시간 퀴즈 15문항 직접 추출
+        if "dongwonlab.com" in url:
+            try:
+                api_resp = requests.get("http://dongwonlab.com/api/courses", headers=headers, timeout=10)
+                if api_resp.status_code == 200:
+                    api_data = api_resp.json()
+                    quizzes = api_data.get("active_quizzes", [])
+                    if quizzes:
+                        quiz_blocks = []
+                        for idx, q in enumerate(quizzes, 1):
+                            course = q.get("course", "원가회계")
+                            session = q.get("session", "")
+                            quest = q.get("question", "")
+                            options = q.get("options", [])
+                            opt_str = "\n".join([f"  {i+1}. {opt}" for i, opt in enumerate(options)])
+                            quiz_blocks.append(
+                                f"[동원랩 실시간 퀴즈 {idx}] ({course} - {session})\n문제: {quest}\n선택지:\n{opt_str}"
+                            )
+                        
+                        full_dongwon_text = "\n\n".join(quiz_blocks)
+                        logging.info(f"🎯 dongwonlab.com 퀴즈 {len(quizzes)}개 특화 추출 성공!")
+                        return jsonify({
+                            "success": True,
+                            "is_dongwonlab": True,
+                            "target_field": "practice_problems",
+                            "subject": "원가회계 (1~5주차 교수님 퀴즈 족보)",
+                            "title": f"동원랩 실시간 퀴즈 족보 (총 {len(quizzes)}문항)",
+                            "text": full_dongwon_text
+                        })
+            except Exception as e:
+                logging.warning(f"dongwonlab API 추출 시도 중 예외: {e}")
+
         resp = requests.get(url, headers=headers, timeout=10)
         resp.raise_for_status()
 
