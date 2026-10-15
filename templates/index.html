@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 중간고사 족보 & 실전 모의시험 마스터 | Exam Master</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 상단 글로벌 네비게이션 -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="brand">
+                <span class="brand-icon">🎓</span>
+                <div class="brand-text">
+                    <span class="brand-title">EXAM MASTER</span>
+                    <span class="brand-sub">AI 중간고사 대비 모의시험 생성기</span>
+                </div>
+            </div>
+            <div class="nav-status">
+                <span class="badge-tag live-badge">● 실시간 AI 출제 엔진 가동 중</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- =================================================================
+             VIEW 1: 자료 입력 및 출제 설정실 (SETUP VIEW)
+             ================================================================= -->
+        <section id="setupView" class="view-section active">
+            <div class="setup-hero">
+                <span class="hero-badge">🎯 시험 적중률 100% 도전</span>
+                <h1 class="hero-title">교수님 강의 자료와 참여 웹 연습문제로<br><span class="gradient-text">진짜 시험에 나올 문제</span>를 만듭니다</h1>
+                <p class="hero-desc">교수님 수업 PPT 요약본과 학생참여 웹 퀴즈를 넣으면, Gemini AI가 실제 시험 유형(4~5지선다 객관식 + 주관식 단답형)으로 즉시 출제해 드립니다.</p>
+                
+                <div class="hero-action-row">
+                    <button type="button" id="loadSampleBtn" class="btn-sample">
+                        <span>💡 예제 자료로 1초 만에 체험해보기</span>
+                    </button>
+                </div>
+            </div>
+
+            <form id="setupForm" class="setup-form-card">
+                <!-- 과목명 및 기본 정보 -->
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label for="subjectName">📚 과목명 / 시험 범위</label>
+                        <input type="text" id="subjectName" placeholder="예: 컴퓨터 개론 및 프로그래밍 (1~6주차)" value="컴퓨터 개론 및 프로그래밍 (중간고사)">
+                    </div>
+                </div>
+
+                <!-- 2단 텍스트 입력창: 강의 자료 vs 참여 웹 연습문제 -->
+                <div class="input-grid">
+                    <!-- 입력 1: 강의 자료 및 예제 -->
+                    <div class="input-card">
+                        <div class="input-card-header">
+                            <span class="header-icon">📖</span>
+                            <div>
+                                <h3>교수님 강의 자료 & 예제 요약</h3>
+                                <p>수업 PPT 슬라이드, 요약 필기, 이론 설명을 붙여넣으세요.</p>
+                            </div>
+                        </div>
+                        <textarea id="lectureNotes" class="exam-textarea" rows="8" placeholder="예시:&#10;1장: 컴퓨터의 기본 구조는 중앙처리장치(CPU), 주기억장치, 보조기억장치, 입출력장치로 구성된다.&#10;CPU 내부에는 산술논리연산장치(ALU), 제어장치(Control Unit), 레지스터가 존재한다.&#10;캐시 메모리는 CPU와 주기억장치 간의 속도 차이를 극복하기 위한 고속 버퍼 메모리이다."></textarea>
+                    </div>
+
+                    <!-- 입력 2: 학생참여 웹 연습문제 (족보) -->
+                    <div class="input-card highlight-card">
+                        <div class="input-card-header">
+                            <span class="header-icon">🎯</span>
+                            <div>
+                                <h3>학생참여 웹 이론 연습문제 <span class="hot-pill">★실제 출제 유력 족보★</span></h3>
+                                <p>교수님이 웹에 올리신 퀴즈와 정답을 그대로 복사해 넣으세요.</p>
+                            </div>
+                        </div>
+                        <textarea id="practiceProblems" class="exam-textarea" rows="8" placeholder="예시:&#10;[연습문제 1] CPU 내부에서 다음 실행할 명령어의 주소를 보관하는 레지스터는?&#10;정답: 프로그램 카운터(PC, Program Counter)&#10;&#10;[연습문제 2] 캐시 메모리의 사상 방식 3가지를 쓰시오.&#10;정답: 직접 사상, 연관 사상, 세트 연관 사상&#10;&#10;[연습문제 3] 다음 중 비휘발성 메모리에 해당하는 것은? 1.DRAM 2.SRAM 3.ROM 4.캐시&#10;정답: 3. ROM"></textarea>
+                    </div>
+                </div>
+
+                <!-- 출제 옵션 설정 바 -->
+                <div class="options-panel">
+                    <h4 class="options-title">⚙️ 출제 맞춤 설정</h4>
+                    <div class="options-grid">
+                        <!-- 출제 모드 -->
+                        <div class="option-item">
+                            <label class="option-label">출제 포커스</label>
+                            <div class="radio-group">
+                                <label class="radio-card active">
+                                    <input type="radio" name="mode" value="hit_focus" checked>
+                                    <span class="radio-title">🎯 족보 적중 모드</span>
+                                    <span class="radio-desc">교수님 연습문제 그대로 + 기출 변형 집중</span>
+                                </label>
+                                <label class="radio-card">
+                                    <input type="radio" name="mode" value="comprehensive">
+                                    <span class="radio-title">📚 개념 심화 모드</span>
+                                    <span class="radio-desc">강의 자료 전체 이론을 골고루 출제</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 문항 유형 -->
+                        <div class="option-item">
+                            <label class="option-label">문항 유형</label>
+                            <div class="select-wrapper">
+                                <select id="questionTypes">
+                                    <option value="mix" selected>객관식 + 주관식 단답형 혼합 (실전형)</option>
+                                    <option value="multiple_choice">4~5지선다 객관식만 출제</option>
+                                    <option value="subjective">주관식 단답형/용어 채우기만 출제</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 문항 수 -->
+                        <div class="option-item">
+                            <label class="option-label">문항 수</label>
+                            <div class="select-wrapper">
+                                <select id="questionCount">
+                                    <option value="5">5문제 (빠른 점검, 10분)</option>
+                                    <option value="10" selected>10문제 (표준 모의고사, 20분)</option>
+                                    <option value="15">15문제 (심화 모의고사, 30분)</option>
+                                    <option value="20">20문제 (완전 정복, 40분)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 시험 생성 버튼 -->
+                <div class="submit-action-box">
+                    <button type="submit" id="generateExamBtn" class="btn-primary-large">
+                        <span class="btn-icon">🚀</span>
+                        <span class="btn-text">AI 실전 모의고사 생성 및 시험장 입장</span>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- =================================================================
+             VIEW 2: 실전 모의시험장 (EXAM VIEW)
+             ================================================================= -->
+        <section id="examView" class="view-section hidden">
+            <!-- 시험 상단 고정 헤더 -->
+            <div class="exam-header-bar">
+                <div class="exam-info">
+                    <span class="exam-subject-pill" id="examSubjectPill">컴퓨터 개론</span>
+                    <h2 class="exam-title-text" id="examTitleText">2026 중간고사 대비 실전 모의고사</h2>
+                </div>
+                
+                <div class="exam-metrics">
+                    <div class="metric-box timer-box" id="timerBox">
+                        <span class="metric-label">⏱️ 남은 시간</span>
+                        <span class="metric-val" id="timerDisplay">15:00</span>
+                    </div>
+                    <div class="metric-box progress-metric">
+                        <span class="metric-label">📊 진행 상황</span>
+                        <span class="metric-val" id="answeredProgressText">0 / 10 완료</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 프로그레스 바 -->
+            <div class="exam-progress-bar-bg">
+                <div class="exam-progress-bar-fill" id="examProgressBar"></div>
+            </div>
+
+            <!-- 문제 목록 렌더링 컨테이너 -->
+            <div class="questions-container" id="questionsContainer">
+                <!-- 자바스크립트로 문제 카드들이 동적 생성됩니다 -->
+            </div>
+
+            <!-- 시험 하단 액션 바 -->
+            <div class="exam-bottom-bar">
+                <button type="button" id="quitExamBtn" class="btn-secondary">
+                    <span>← 시험 중단 및 처음으로</span>
+                </button>
+                <button type="button" id="submitExamBtn" class="btn-submit-exam">
+                    <span>📝 답안 최종 제출 및 즉시 채점</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- =================================================================
+             VIEW 3: 성적표 & AI 족보 오답노트 (RESULTS VIEW)
+             ================================================================= -->
+        <section id="resultsView" class="view-section hidden">
+            <!-- 성적 요약 배너 -->
+            <div class="score-hero-card">
+                <div class="score-badge-circle" id="gradeBadge">A0</div>
+                <div class="score-main-info">
+                    <span class="score-sub-label">실전 모의고사 최종 채점 결과</span>
+                    <h2 class="score-number-text"><span id="finalScore">85</span><span class="score-unit">점 / 100점</span></h2>
+                    <p class="score-stats-text" id="scoreStatsText">총 10문제 중 8문제 정답 | 소요 시간: 7분 12초</p>
+                </div>
+                <div class="score-actions">
+                    <button type="button" id="retryWrongOnlyBtn" class="btn-retry-wrong">
+                        <span>🔴 틀린 문제만 다시 풀기</span>
+                    </button>
+                    <button type="button" id="newExamBtn" class="btn-new-exam">
+                        <span>➕ 새로운 시험 만들기</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- AI 교수님 학습 총평 & 시험 꿀팁 처방전 -->
+            <div class="ai-prescription-card">
+                <div class="prescription-header">
+                    <span class="prescription-icon">💡</span>
+                    <h3>AI 수석 출제위원의 실전 중간고사 집중 처방</h3>
+                </div>
+                <div class="prescription-content" id="aiPrescriptionContent">
+                    채점 분석 중...
+                </div>
+            </div>
+
+            <!-- 문제 리뷰 필터 탭 -->
+            <div class="review-filter-bar">
+                <div class="filter-tabs">
+                    <button type="button" class="tab-btn active" data-filter="all">전체 문항 (<span id="countAll">0</span>)</button>
+                    <button type="button" class="tab-btn tab-wrong" data-filter="wrong">오답 노트 (<span id="countWrong">0</span>)</button>
+                    <button type="button" class="tab-btn" data-filter="correct">정답 문항 (<span id="countCorrect">0</span>)</button>
+                </div>
+                <button type="button" id="printExamBtn" class="btn-print" title="시험지 인쇄 또는 PDF 저장">
+                    <span>🖨️ 인쇄 / PDF 저장</span>
+                </button>
+            </div>
+
+            <!-- 채점된 문제 상세 리뷰 리스트 -->
+            <div class="graded-review-list" id="gradedReviewList">
+                <!-- 채점 결과 카드가 동적으로 들어옵니다 -->
+            </div>
+        </section>
+
+        <!-- 로딩 오버레이 -->
+        <div id="loadingOverlay" class="loading-overlay hidden">
+            <div class="loading-card">
+                <div class="loading-spinner"></div>
+                <h3 id="loadingTitle">AI 수석 출제위원이 시험 문제를 출제하고 있습니다...</h3>
+                <p id="loadingDesc">교수님의 강의 자료와 참여 웹 연습문제를 분석하여 실전 적중 문제를 구성 중입니다. (약 5~10초 소요)</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="footer">
+        <p>AI 중간고사 족보 & 실전 모의시험 마스터 | Powered by Google Gemini 3.8 Flash</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
