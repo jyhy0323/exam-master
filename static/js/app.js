@@ -36,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const timePresetChips = document.querySelectorAll("#timePresetRow .preset-chip");
     const timePresetRow = document.getElementById("timePresetRow");
     const timeHintText = document.getElementById("timeHintText");
+    const examDifficultySelect = document.getElementById("examDifficulty");
 
     const questionTypesSelect = document.getElementById("questionTypes");
     const modeRadios = document.querySelectorAll('input[name="mode"]');
@@ -483,6 +484,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const subjectName = subjectNameInput.value.trim() || "중간고사 모의평가";
         const selectedMode = document.querySelector('input[name="mode"]:checked').value;
         const questionTypes = questionTypesSelect.value;
+        const difficulty = examDifficultySelect ? examDifficultySelect.value : "hard";
 
         // 사용자가 자유롭게 입력한 문항 수 (기본 10, 범위 1~50)
         let questionCount = parseInt(customQuestionCountInput ? customQuestionCountInput.value : 10, 10);
@@ -504,10 +506,11 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        const diffLabel = (difficulty === "hard") ? "🔥실전 대학시험(킬러 계산)" : (difficulty === "standard" ? "📚표준 중간고사" : "🌱기본 점검");
         const timeMsg = (timeLimitMinutes === 0) ? "무제한 연습 모드" : `${timeLimitMinutes}분 제한`;
         showLoading(
-            "AI 수석 출제위원이 시험 문제를 출제하고 있습니다...",
-            `[${subjectName}] 입력 자료와 교수님 연습문제를 분석하여 ${questionCount}문항 (${timeMsg}) 실전 모의고사를 구성 중입니다.`
+            "AI 수석 출제위원이 고난도 실전 시험 문제를 출제하고 있습니다...",
+            `[${subjectName}] ${diffLabel} | ${questionCount}문항 (${timeMsg}) 다단계 계산 및 핵심 이론 모의고사를 구성 중입니다.`
         );
 
         try {
@@ -519,6 +522,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     practice_problems: practiceProblems,
                     subject_name: subjectName,
                     mode: selectedMode,
+                    difficulty: difficulty,
                     question_count: questionCount,
                     time_limit_minutes: timeLimitMinutes,
                     question_types: questionTypes
@@ -853,6 +857,54 @@ document.addEventListener("DOMContentLoaded", () => {
                 codeSnippetHtml = `<pre class="q-code-snippet"><code>${escapeHtml(g.code_snippet)}</code></pre>`;
             }
 
+            // 4~5지선다 전체 보기 목록 및 선지별 정답/오답 마킹
+            let optionsReviewHtml = "";
+            if (g.type === "multiple_choice" && g.options && g.options.length > 0) {
+                const normUserAns = (g.user_answer || "").trim();
+                const normCorrectAns = (g.correct_answer || "").trim();
+
+                const itemsHtml = g.options.map((opt, optIdx) => {
+                    const optTrim = opt.trim();
+                    // 정답 선지 여부 판정 (전체 일치 또는 "1." 앞번호 일치)
+                    const isCorrect = (optTrim === normCorrectAns || (normCorrectAns.length >= 2 && optTrim.startsWith(normCorrectAns.slice(0, 2))));
+                    // 사용자가 선택한 선지 여부 판정
+                    const isUserPick = (normUserAns && (optTrim === normUserAns || (normUserAns.length >= 2 && optTrim.startsWith(normUserAns.slice(0, 2)))));
+
+                    let itemClass = "review-choice-item";
+                    let badgeHtml = "";
+
+                    if (isCorrect && isUserPick) {
+                        itemClass += " choice-correct-user";
+                        badgeHtml = `<span class="choice-review-badge correct">✔ 정답 (내가 맞힘)</span>`;
+                    } else if (isCorrect) {
+                        itemClass += " choice-correct";
+                        badgeHtml = `<span class="choice-review-badge correct">✔ 모범 정답</span>`;
+                    } else if (isUserPick) {
+                        itemClass += " choice-wrong-user";
+                        badgeHtml = `<span class="choice-review-badge wrong">✘ 내가 고른 오답</span>`;
+                    } else {
+                        itemClass += " choice-neutral";
+                    }
+
+                    return `
+                        <div class="${itemClass}">
+                            <div class="choice-content">
+                                <span class="choice-marker">${optIdx + 1}</span>
+                                <span class="choice-text">${escapeHtml(optTrim)}</span>
+                            </div>
+                            ${badgeHtml}
+                        </div>
+                    `;
+                }).join("");
+
+                optionsReviewHtml = `
+                    <div class="review-options-container">
+                        <div class="review-options-header">📋 4~5지선다 전체 보기 및 선지별 정·오답 분석</div>
+                        <div class="review-options-list">${itemsHtml}</div>
+                    </div>
+                `;
+            }
+
             card.innerHTML = `
                 <div class="q-card-header">
                     <div class="q-num-wrap">
@@ -863,6 +915,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
                 <h3 class="q-title">${escapeHtml(g.question)}</h3>
                 ${codeSnippetHtml}
+
+                ${optionsReviewHtml}
 
                 <div class="answer-comparison-box">
                     <div class="ans-row">
@@ -876,7 +930,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
 
                 <div class="explanation-box">
-                    <div class="explanation-title">💡 상세 해설 & 핵심 시험 꿀팁</div>
+                    <div class="explanation-title">💡 상세 단계별 해설 & 핵심 시험 꿀팁</div>
                     <p>${escapeHtml(g.explanation)}</p>
                 </div>
             `;

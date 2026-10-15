@@ -219,11 +219,12 @@ def generate_exam():
             time_limit_minutes = max(10, question_count * 2)
 
         question_types = data.get("question_types", "mix")  # "mix", "multiple_choice", "subjective"
+        difficulty = data.get("difficulty", "hard")  # "hard", "standard", "basic"
 
         if not lecture_notes and not practice_problems:
             return jsonify({"success": False, "error": "강의 자료 내용이나 교수님 연습문제를 하나 이상 입력해 주세요."}), 400
 
-        logging.info(f"📝 시험 생성 요청: 과목={subject_name}, 모드={mode}, 문항수={question_count}, 제한시간={time_limit_minutes}분, 유형={question_types}")
+        logging.info(f"📝 시험 생성 요청: 과목={subject_name}, 모드={mode}, 난이도={difficulty}, 문항수={question_count}, 제한시간={time_limit_minutes}분, 유형={question_types}")
 
         prompt = f"""
 당신은 대학교 강의와 시험 출제 전문가이자 수석 출제위원입니다.
@@ -234,6 +235,22 @@ def generate_exam():
 
 [출제 모드]
 {"🎯 족보 적중 모드: 교수님의 참여 웹 연습문제와 예제를 바탕으로, 원래 문제의 핵심 개념을 그대로 출제하거나 보기를 변형/반대 상황을 묻는 '기출 쌍둥이 변형 문제'를 최우선으로 다수 출제하세요." if mode == "hit_focus" else "📚 개념 심화 모드: 강의 자료 전체의 이론, 정의, 핵심 원리를 골고루 다루어 빈틈없이 대비할 수 있도록 출제하세요."}
+
+[출제 난이도 및 킬러 계산 문제 엄격 지침]
+- 현재 설정된 난이도: {"🔥 실전 대학시험 / 킬러 계산 모드 (암산 불가·연습장 손풀이 필수)" if difficulty == "hard" else ("표준 중간고사 모드" if difficulty == "standard" else "기초 점검 모드")}
+- 【절대 단순 암산 금지 & 전공 교재 실전 연습문제 수준 준수】:
+  학생이 제공한 교재나 PDF의 실제 연습문제들은 손으로 직접 연습장에 2~4단계 계산 과정을 전개해야만 답이 나오는 전공 수준의 문제들입니다.
+  단순히 공식에 숫자 하나를 넣어 5초 만에 암산으로 풀리는 문제는 절대로 출제하지 마세요!
+- 【계산형 문제 출제 필수 원칙】:
+  1. [자료] 또는 [표] 상세 조건 제시:
+     계산형 문제의 경우 질문(question) 본문이나 code_snippet에 실제 대학교 시험처럼 구체적인 조건과 수치 데이터 박스를 반드시 제시하세요.
+     (예: 수량 흐름, 단가, 기초/기말 재고량 및 진행도(%), 부문별 배부기준, 단위당 변동비, 총고정비, 목표이익, 법인세율, 메모리 주소 비트수 등)
+  2. 2단계 이상의 복합/연쇄 계산:
+     1단계 계산 결과가 2단계와 3단계의 입력값으로 이어지는 다단계 계산 구조(예: 환산량 계산 -> 단위당 원가 도출 -> 기말재공품 및 매출원가 분배)로 출제하세요.
+  3. 실전 함정 선지(Distractors) 정밀 설계:
+     학생들이 중간 계산 과정에서 흔히 저지르는 전형적 실수(예: 공정 초 투입인데 기말 완성도를 곱하거나, 기초재고를 누락하는 등)를 반영한 오답 수치를 4~5지선다 보기에 교묘하게 배치하세요.
+  4. 해설(explanation)의 단계별 풀이 증명:
+     계산 문제의 explanation에는 반드시 `[단계별 계산 풀이] 1단계: ... -> 2단계: ... -> 3단계: ... -> 따라서 최종 정답: ...` 형태로 수식과 풀이 과정을 완벽하게 서술하세요.
 
 [문항 유형 요구사항]
 - 요청 유형: {question_types}
@@ -262,6 +279,7 @@ def generate_exam():
    - keywords에는 대소문자, 한글/영문 표기 차이 등을 감안하여 채점에 필요한 핵심 키워드 리스트를 2~4개 작성하세요 (예: ["객체지향", "OOP", "Object-Oriented"]).
 3. explanation(해설):
    - 왜 이것이 정답이고, 다른 보기가 왜 오답인지 중학생도 이해할 수 있게 친절하고 명쾌하게 설명합니다.
+   - 계산 문제인 경우 반드시 [단계별 계산 풀이]를 포함하세요.
    - "시험 꿀팁"을 한 줄 덧붙여주세요.
 4. source_tag:
    - 이 문제가 어디서 유래했는지 표기합니다 (예: "교수님 참여웹 3강 연습문제 변형", "강의 슬라이드 2장 핵심 정의").

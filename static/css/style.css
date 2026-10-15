@@ -509,6 +509,12 @@ body {
     letter-spacing: -0.2px;
 }
 
+.custom-badge.hot-badge {
+    background: rgba(244, 63, 94, 0.2);
+    color: #fb7185;
+    border-color: rgba(244, 63, 94, 0.4);
+}
+
 .label-with-toggle {
     display: flex;
     align-items: center;
@@ -1171,6 +1177,131 @@ body {
     border-radius: 6px;
     font-size: 0.82rem;
     font-weight: 800;
+}
+
+/* 오답 검토 화면의 4~5지선다 전체 보기 목록 */
+.review-options-container {
+    margin: 16px 0;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+}
+
+.review-options-header {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #94a3b8;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.review-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.review-choice-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1.5px solid var(--card-border);
+    background: rgba(30, 41, 59, 0.4);
+    transition: all 0.2s ease;
+}
+
+.review-choice-item .choice-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.review-choice-item .choice-marker {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.review-choice-item .choice-text {
+    font-size: 0.94rem;
+    line-height: 1.5;
+    color: #94a3b8;
+    word-break: break-word;
+}
+
+/* 1) 모범 정답 (사용자가 맞힌 경우 & 못 맞힌 경우) */
+.review-choice-item.choice-correct,
+.review-choice-item.choice-correct-user {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.14);
+}
+
+.review-choice-item.choice-correct .choice-marker,
+.review-choice-item.choice-correct-user .choice-marker {
+    background: #10b981;
+    color: #ffffff;
+}
+
+.review-choice-item.choice-correct .choice-text,
+.review-choice-item.choice-correct-user .choice-text {
+    color: #ffffff;
+    font-weight: 700;
+}
+
+/* 2) 사용자가 잘못 고른 오답 */
+.review-choice-item.choice-wrong-user {
+    border-color: #f43f5e;
+    background: rgba(244, 63, 94, 0.14);
+}
+
+.review-choice-item.choice-wrong-user .choice-marker {
+    background: #f43f5e;
+    color: #ffffff;
+}
+
+.review-choice-item.choice-wrong-user .choice-text {
+    color: #fecdd3;
+    font-weight: 700;
+    text-decoration: line-through;
+}
+
+/* 3) 선지 뱃지 태그 */
+.choice-review-badge {
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 0.76rem;
+    font-weight: 800;
+    white-space: nowrap;
+    margin-left: 10px;
+    flex-shrink: 0;
+}
+
+.choice-review-badge.correct {
+    background: #10b981;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+}
+
+.choice-review-badge.wrong {
+    background: #f43f5e;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(244, 63, 94, 0.3);
 }
 
 .answer-comparison-box {
