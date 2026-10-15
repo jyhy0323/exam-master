@@ -147,17 +147,52 @@
                             </div>
                         </div>
 
-                        <!-- 문항 수 -->
+                        <!-- 문항 수 (직접 입력 & 퀵 프리셋) -->
                         <div class="option-item">
-                            <label class="option-label">문항 수</label>
-                            <div class="select-wrapper">
-                                <select id="questionCount">
-                                    <option value="5">5문제 (빠른 점검, 10분)</option>
-                                    <option value="10" selected>10문제 (표준 모의고사, 20분)</option>
-                                    <option value="15">15문제 (심화 모의고사, 30분)</option>
-                                    <option value="20">20문제 (완전 정복, 40분)</option>
-                                </select>
+                            <label class="option-label" for="customQuestionCount">
+                                <span>문항 수</span>
+                                <span class="custom-badge">자유 직접 입력</span>
+                            </label>
+                            <div class="input-with-unit">
+                                <input type="number" id="customQuestionCount" min="1" max="50" value="10" placeholder="10">
+                                <span class="unit-text">문항</span>
                             </div>
+                            <div class="preset-chips-row" id="countPresetRow">
+                                <button type="button" class="preset-chip" data-count="5">5</button>
+                                <button type="button" class="preset-chip active" data-count="10">10</button>
+                                <button type="button" class="preset-chip" data-count="15">15</button>
+                                <button type="button" class="preset-chip" data-count="20">20</button>
+                                <button type="button" class="preset-chip" data-count="25">25</button>
+                                <button type="button" class="preset-chip" data-count="30">30</button>
+                            </div>
+                            <span class="option-hint-text">1 ~ 50문항 중 원하는 숫자를 직접 입력하세요</span>
+                        </div>
+
+                        <!-- 시험 제한 시간 (직접 입력 & 퀵 프리셋 & 무제한) -->
+                        <div class="option-item">
+                            <div class="label-with-toggle">
+                                <label class="option-label" for="customTimeLimit">
+                                    <span>시험 시간</span>
+                                    <span class="custom-badge">자유 직접 입력</span>
+                                </label>
+                                <label class="unlimited-checkbox-label" title="시간제한 없이 여유롭게 풀기">
+                                    <input type="checkbox" id="unlimitedTimeToggle">
+                                    <span>무제한</span>
+                                </label>
+                            </div>
+                            <div class="input-with-unit" id="timeInputWrapper">
+                                <input type="number" id="customTimeLimit" min="1" max="180" value="20" placeholder="20">
+                                <span class="unit-text">분</span>
+                            </div>
+                            <div class="preset-chips-row" id="timePresetRow">
+                                <button type="button" class="preset-chip" data-time="auto" title="문항당 2분 자동 계산">자동</button>
+                                <button type="button" class="preset-chip" data-time="10">10분</button>
+                                <button type="button" class="preset-chip active" data-time="20">20분</button>
+                                <button type="button" class="preset-chip" data-time="30">30분</button>
+                                <button type="button" class="preset-chip" data-time="50">50분</button>
+                                <button type="button" class="preset-chip" data-time="60">60분</button>
+                            </div>
+                            <span class="option-hint-text" id="timeHintText">직접 분 단위로 입력하거나 무제한 모드를 켤 수 있습니다</span>
                         </div>
                     </div>
                 </div>
@@ -185,7 +220,7 @@
                 
                 <div class="exam-metrics">
                     <div class="metric-box timer-box" id="timerBox">
-                        <span class="metric-label">⏱️ 남은 시간</span>
+                        <span class="metric-label" id="timerLabel">⏱️ 남은 시간</span>
                         <span class="metric-val" id="timerDisplay">15:00</span>
                     </div>
                     <div class="metric-box progress-metric">

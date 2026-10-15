@@ -496,6 +496,152 @@ body {
     border-color: var(--primary);
 }
 
+/* 문항 수 및 시험 시간 직접 입력 커스텀 스타일 */
+.custom-badge {
+    background: rgba(99, 102, 241, 0.2);
+    color: #818cf8;
+    font-size: 0.72rem;
+    padding: 2px 7px;
+    border-radius: 9999px;
+    margin-left: 6px;
+    font-weight: 700;
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    letter-spacing: -0.2px;
+}
+
+.label-with-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.label-with-toggle .option-label {
+    margin-bottom: 0;
+}
+
+.unlimited-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #38bdf8;
+    cursor: pointer;
+    background: rgba(56, 189, 248, 0.1);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    padding: 2px 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.unlimited-checkbox-label:hover {
+    background: rgba(56, 189, 248, 0.2);
+}
+
+.unlimited-checkbox-label input {
+    cursor: pointer;
+    accent-color: #38bdf8;
+    width: 13px;
+    height: 13px;
+}
+
+.input-with-unit {
+    display: flex;
+    align-items: stretch;
+    background: rgba(30, 41, 59, 0.7);
+    border: 1.5px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.input-with-unit:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.input-with-unit.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+    background: rgba(15, 23, 42, 0.5);
+}
+
+.input-with-unit input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    padding: 10px 14px;
+    color: #ffffff;
+    font-size: 1.05rem;
+    font-weight: 800;
+    outline: none;
+}
+
+.input-with-unit input::-webkit-inner-spin-button,
+.input-with-unit input::-webkit-outer-spin-button {
+    opacity: 0.6;
+}
+
+.input-with-unit .unit-text {
+    padding: 0 14px;
+    color: #94a3b8;
+    font-size: 0.86rem;
+    font-weight: 700;
+    background: rgba(15, 23, 42, 0.6);
+    display: flex;
+    align-items: center;
+    border-left: 1px solid var(--card-border);
+    user-select: none;
+}
+
+.preset-chips-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.preset-chip {
+    padding: 4px 9px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.preset-chip:hover {
+    border-color: #6366f1;
+    color: #ffffff;
+    background: rgba(99, 102, 241, 0.15);
+}
+
+.preset-chip.active {
+    border-color: #6366f1;
+    background: #4f46e5;
+    color: #ffffff;
+    font-weight: 800;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+}
+
+.preset-chips-row.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.option-hint-text {
+    font-size: 0.73rem;
+    color: #64748b;
+    margin-top: 6px;
+    display: block;
+    line-height: 1.4;
+}
+
 .btn-primary-large {
     width: 100%;
     padding: 18px;

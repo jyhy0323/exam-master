@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let remainingSeconds = 0;
     let totalExamSeconds = 0;
     let timeSpentSeconds = 0;
+    let isUnlimitedTime = false;
 
     // 2. DOM 요소 캐싱
     const setupView = document.getElementById("setupView");
@@ -25,7 +26,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const subjectNameInput = document.getElementById("subjectName");
     const lectureNotesInput = document.getElementById("lectureNotes");
     const practiceProblemsInput = document.getElementById("practiceProblems");
-    const questionCountSelect = document.getElementById("questionCount");
+
+    // 문항 수 및 시험 시간 맞춤 설정 요소
+    const customQuestionCountInput = document.getElementById("customQuestionCount");
+    const customTimeLimitInput = document.getElementById("customTimeLimit");
+    const unlimitedTimeToggle = document.getElementById("unlimitedTimeToggle");
+    const timeInputWrapper = document.getElementById("timeInputWrapper");
+    const countPresetChips = document.querySelectorAll("#countPresetRow .preset-chip");
+    const timePresetChips = document.querySelectorAll("#timePresetRow .preset-chip");
+    const timePresetRow = document.getElementById("timePresetRow");
+    const timeHintText = document.getElementById("timeHintText");
+
     const questionTypesSelect = document.getElementById("questionTypes");
     const modeRadios = document.querySelectorAll('input[name="mode"]');
 
@@ -49,6 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const examTitleText = document.getElementById("examTitleText");
     const timerBox = document.getElementById("timerBox");
     const timerDisplay = document.getElementById("timerDisplay");
+    const timerLabel = document.getElementById("timerLabel");
     const answeredProgressText = document.getElementById("answeredProgressText");
     const examProgressBar = document.getElementById("examProgressBar");
     const questionsContainer = document.getElementById("questionsContainer");
@@ -111,6 +123,110 @@ document.addEventListener("DOMContentLoaded", () => {
             radio.closest(".radio-card").classList.add("active");
         });
     });
+
+    // 4-0. 문항 수 및 시험 시간 자유 맞춤 설정 핸들러
+    if (countPresetChips.length > 0) {
+        countPresetChips.forEach(chip => {
+            chip.addEventListener("click", () => {
+                const count = parseInt(chip.dataset.count, 10);
+                if (customQuestionCountInput) {
+                    customQuestionCountInput.value = count;
+                }
+                updateCountChipActive(count);
+                syncAutoTimeLimit();
+            });
+        });
+    }
+
+    if (customQuestionCountInput) {
+        customQuestionCountInput.addEventListener("input", () => {
+            let count = parseInt(customQuestionCountInput.value, 10);
+            if (!isNaN(count)) {
+                updateCountChipActive(count);
+                syncAutoTimeLimit();
+            }
+        });
+    }
+
+    function updateCountChipActive(count) {
+        countPresetChips.forEach(c => {
+            if (parseInt(c.dataset.count, 10) === count) {
+                c.classList.add("active");
+            } else {
+                c.classList.remove("active");
+            }
+        });
+    }
+
+    function syncAutoTimeLimit() {
+        const autoChip = document.querySelector('#timePresetRow .preset-chip[data-time="auto"]');
+        if (autoChip && autoChip.classList.contains("active") && !unlimitedTimeToggle.checked) {
+            const count = parseInt(customQuestionCountInput.value, 10) || 10;
+            const autoMins = Math.max(10, count * 2);
+            if (customTimeLimitInput) customTimeLimitInput.value = autoMins;
+            if (timeHintText) timeHintText.textContent = `문항 수(${count}문제)에 맞춰 1문제당 2분(${autoMins}분)으로 자동 계산되었습니다.`;
+        }
+    }
+
+    if (timePresetChips.length > 0) {
+        timePresetChips.forEach(chip => {
+            chip.addEventListener("click", () => {
+                if (unlimitedTimeToggle && unlimitedTimeToggle.checked) {
+                    unlimitedTimeToggle.checked = false;
+                    syncUnlimitedState();
+                }
+
+                timePresetChips.forEach(c => c.classList.remove("active"));
+                chip.classList.add("active");
+
+                const timeMode = chip.dataset.time;
+                if (timeMode === "auto") {
+                    syncAutoTimeLimit();
+                } else {
+                    const mins = parseInt(timeMode, 10);
+                    if (customTimeLimitInput) customTimeLimitInput.value = mins;
+                    if (timeHintText) timeHintText.textContent = `시험 시간이 ${mins}분으로 설정되었습니다.`;
+                }
+            });
+        });
+    }
+
+    if (customTimeLimitInput) {
+        customTimeLimitInput.addEventListener("input", () => {
+            timePresetChips.forEach(c => c.classList.remove("active"));
+            const mins = parseInt(customTimeLimitInput.value, 10);
+            if (!isNaN(mins)) {
+                timePresetChips.forEach(c => {
+                    if (c.dataset.time === String(mins)) {
+                        c.classList.add("active");
+                    }
+                });
+                if (timeHintText) timeHintText.textContent = `시험 시간 ${mins}분 직접 입력됨`;
+            }
+        });
+    }
+
+    if (unlimitedTimeToggle) {
+        unlimitedTimeToggle.addEventListener("change", syncUnlimitedState);
+    }
+
+    function syncUnlimitedState() {
+        if (!unlimitedTimeToggle) return;
+        if (unlimitedTimeToggle.checked) {
+            if (timeInputWrapper) timeInputWrapper.classList.add("disabled");
+            if (timePresetRow) timePresetRow.classList.add("disabled");
+            if (timeHintText) timeHintText.textContent = "⏱️ 시간 제한 없음: 제한 시간 없이 여유롭게 공부하며 풀 수 있습니다.";
+            timePresetChips.forEach(c => c.classList.remove("active"));
+        } else {
+            if (timeInputWrapper) timeInputWrapper.classList.remove("disabled");
+            if (timePresetRow) timePresetRow.classList.remove("disabled");
+            if (timeHintText) timeHintText.textContent = "직접 분 단위로 입력하거나 프리셋을 선택할 수 있습니다.";
+            const mins = parseInt(customTimeLimitInput.value, 10) || 20;
+            timePresetChips.forEach(c => {
+                if (c.dataset.time === String(mins)) c.classList.add("active");
+            });
+        }
+    }
 
     // 4-1. PDF 파일 자동 추출 핸들러
     if (pdfFileInput) {
@@ -338,6 +454,15 @@ document.addEventListener("DOMContentLoaded", () => {
 정답: 완전 연관 사상 (Fully Associative Mapping)
 해설: 완전 연관 사상은 어느 캐시 블록에나 자유롭게 배치될 수 있어 충돌이 가장 적습니다.`;
 
+        // 문항 수 및 시간 기본값 리셋
+        if (customQuestionCountInput) customQuestionCountInput.value = 10;
+        if (customTimeLimitInput) customTimeLimitInput.value = 20;
+        if (unlimitedTimeToggle) {
+            unlimitedTimeToggle.checked = false;
+            syncUnlimitedState();
+        }
+        updateCountChipActive(10);
+
         // 피드백 애니메이션
         loadSampleBtn.style.background = "rgba(16, 185, 129, 0.25)";
         loadSampleBtn.style.color = "#34d399";
@@ -357,17 +482,32 @@ document.addEventListener("DOMContentLoaded", () => {
         const practiceProblems = practiceProblemsInput.value.trim();
         const subjectName = subjectNameInput.value.trim() || "중간고사 모의평가";
         const selectedMode = document.querySelector('input[name="mode"]:checked').value;
-        const questionCount = questionCountSelect.value;
         const questionTypes = questionTypesSelect.value;
+
+        // 사용자가 자유롭게 입력한 문항 수 (기본 10, 범위 1~50)
+        let questionCount = parseInt(customQuestionCountInput ? customQuestionCountInput.value : 10, 10);
+        if (isNaN(questionCount) || questionCount < 1) questionCount = 10;
+        if (questionCount > 50) questionCount = 50;
+        if (customQuestionCountInput) customQuestionCountInput.value = questionCount;
+
+        // 사용자가 자유롭게 입력한 시험 시간 (0이면 무제한 모드)
+        let timeLimitMinutes = 0;
+        if (!unlimitedTimeToggle || !unlimitedTimeToggle.checked) {
+            timeLimitMinutes = parseInt(customTimeLimitInput ? customTimeLimitInput.value : 20, 10);
+            if (isNaN(timeLimitMinutes) || timeLimitMinutes < 1) {
+                timeLimitMinutes = Math.max(10, questionCount * 2);
+            }
+        }
 
         if (!lectureNotes && !practiceProblems) {
             alert("강의 자료 요약이나 학생참여 웹 연습문제를 하나 이상 입력해 주세요!");
             return;
         }
 
+        const timeMsg = (timeLimitMinutes === 0) ? "무제한 연습 모드" : `${timeLimitMinutes}분 제한`;
         showLoading(
             "AI 수석 출제위원이 시험 문제를 출제하고 있습니다...",
-            `[${subjectName}] 입력 자료와 교수님 연습문제를 분석하여 실제 시험 적중 문항을 구성 중입니다.`
+            `[${subjectName}] 입력 자료와 교수님 연습문제를 분석하여 ${questionCount}문항 (${timeMsg}) 실전 모의고사를 구성 중입니다.`
         );
 
         try {
@@ -380,6 +520,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     subject_name: subjectName,
                     mode: selectedMode,
                     question_count: questionCount,
+                    time_limit_minutes: timeLimitMinutes,
                     question_types: questionTypes
                 })
             });
@@ -405,11 +546,21 @@ document.addEventListener("DOMContentLoaded", () => {
         examSubjectPill.textContent = exam.subject || "중간고사";
         examTitleText.textContent = exam.exam_title || "실전 모의고사";
         
-        // 시간 설정 (분 단위 -> 초 단위)
-        const limitMinutes = exam.time_limit_minutes || 15;
-        totalExamSeconds = limitMinutes * 60;
-        remainingSeconds = totalExamSeconds;
-        timeSpentSeconds = 0;
+        // 시간 설정 (0: 무제한 모드)
+        const limitMinutes = (typeof exam.time_limit_minutes === "number") ? exam.time_limit_minutes : 20;
+        isUnlimitedTime = (limitMinutes <= 0);
+
+        if (isUnlimitedTime) {
+            totalExamSeconds = 0;
+            remainingSeconds = 0;
+            timeSpentSeconds = 0;
+            if (timerLabel) timerLabel.textContent = "⏱️ 경과 시간 (무제한)";
+        } else {
+            totalExamSeconds = limitMinutes * 60;
+            remainingSeconds = totalExamSeconds;
+            timeSpentSeconds = 0;
+            if (timerLabel) timerLabel.textContent = "⏱️ 남은 시간";
+        }
 
         renderQuestions(exam.questions);
         startTimer();
@@ -528,26 +679,37 @@ document.addEventListener("DOMContentLoaded", () => {
         timerBox.classList.remove("warning");
 
         function updateDisplay() {
-            const mins = Math.floor(remainingSeconds / 60);
-            const secs = remainingSeconds % 60;
-            timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            if (isUnlimitedTime) {
+                const mins = Math.floor(timeSpentSeconds / 60);
+                const secs = timeSpentSeconds % 60;
+                timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            } else {
+                const mins = Math.floor(remainingSeconds / 60);
+                const secs = remainingSeconds % 60;
+                timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 
-            if (remainingSeconds <= 180) { // 3분 미만
-                timerBox.classList.add("warning");
+                if (remainingSeconds <= 180) { // 3분 미만
+                    timerBox.classList.add("warning");
+                }
             }
         }
 
         updateDisplay();
 
         timerInterval = setInterval(() => {
-            remainingSeconds--;
             timeSpentSeconds++;
-            updateDisplay();
 
-            if (remainingSeconds <= 0) {
-                clearInterval(timerInterval);
-                alert("⏱️ 시험 시간이 종료되었습니다! 작성하신 답안을 자동으로 제출합니다.");
-                submitExamAnswers();
+            if (!isUnlimitedTime) {
+                remainingSeconds--;
+                updateDisplay();
+
+                if (remainingSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    alert("⏱️ 시험 시간이 종료되었습니다! 작성하신 답안을 자동으로 제출합니다.");
+                    submitExamAnswers();
+                }
+            } else {
+                updateDisplay();
             }
         }, 1000);
     }

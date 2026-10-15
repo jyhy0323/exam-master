@@ -70,13 +70,20 @@ def extract_pdf():
     try:
         reader = PdfReader(io.BytesIO(file.read()))
         total_pages = len(reader.pages)
-        extracted_text = []
 
-        # 최대 100페이지까지 텍스트 추출
-        for idx, page in enumerate(reader.pages[:100]):
+        # 시작/종료 페이지 파라미터 (지정 없으면 전체 추출, 최대 500페이지)
+        start_page = int(request.form.get("start_page", 1))
+        end_page = int(request.form.get("end_page", total_pages))
+        start_idx = max(0, start_page - 1)
+        end_idx = min(total_pages, max(start_idx + 1, end_page))
+
+        extracted_text = []
+        for idx in range(start_idx, end_idx):
+            page = reader.pages[idx]
             page_text = page.extract_text() or ""
-            if page_text.strip():
-                extracted_text.append(f"--- [페이지 {idx + 1}] ---\n{page_text.strip()}")
+            cleaned = page_text.strip()
+            if cleaned:
+                extracted_text.append(f"--- [페이지 {idx + 1}] ---\n{cleaned}")
 
         full_text = "\n\n".join(extracted_text)
         if not full_text.strip():
@@ -85,11 +92,12 @@ def extract_pdf():
                 "error": "PDF에서 텍스트를 추출할 수 없습니다. (스캔된 이미지 전용 PDF일 수 있습니다)"
             }), 400
 
-        logging.info(f"📄 PDF 텍스트 추출 완료: {file.filename} (총 {total_pages}페이지, {len(full_text)}자)")
+        logging.info(f"📄 대용량 PDF 텍스트 추출 완료: {file.filename} (범위: {start_idx+1}~{end_idx}p / 총 {total_pages}p, {len(full_text)}자)")
         return jsonify({
             "success": True,
             "filename": file.filename,
             "total_pages": total_pages,
+            "extracted_range": f"{start_idx+1}~{end_idx}페이지",
             "extracted_length": len(full_text),
             "text": full_text
         })
@@ -200,12 +208,22 @@ def generate_exam():
         subject_name = data.get("subject_name", "중간고사 대비 시험").strip() or "중간고사 대비 시험"
         mode = data.get("mode", "hit_focus")  # "hit_focus" (족보 적중 모드) or "comprehensive" (개념 종합)
         question_count = int(data.get("question_count", 10))
+        # 1문제부터 최대 50문제까지 지원
+        question_count = max(1, min(50, question_count))
+
+        # 시험 제한 시간 (분): 0이면 무제한, None이면 문항당 2분(최소 10분) 자동 계산
+        time_limit_raw = data.get("time_limit_minutes", None)
+        if time_limit_raw is not None and str(time_limit_raw).isdigit():
+            time_limit_minutes = int(time_limit_raw)
+        else:
+            time_limit_minutes = max(10, question_count * 2)
+
         question_types = data.get("question_types", "mix")  # "mix", "multiple_choice", "subjective"
 
         if not lecture_notes and not practice_problems:
             return jsonify({"success": False, "error": "강의 자료 내용이나 교수님 연습문제를 하나 이상 입력해 주세요."}), 400
 
-        logging.info(f"📝 시험 생성 요청: 과목={subject_name}, 모드={mode}, 문항수={question_count}, 유형={question_types}")
+        logging.info(f"📝 시험 생성 요청: 과목={subject_name}, 모드={mode}, 문항수={question_count}, 제한시간={time_limit_minutes}분, 유형={question_types}")
 
         prompt = f"""
 당신은 대학교 강의와 시험 출제 전문가이자 수석 출제위원입니다.
@@ -226,6 +244,11 @@ def generate_exam():
 
 [입력 데이터 2: 교수님 웹 이론 연습문제 및 퀴즈 (★실제 시험 출제 유력 족보★)]
 {practice_problems if practice_problems else "(입력 없음)"}
+
+[대용량 수백 페이지 강의 자료 핵심 축약 원칙]
+- 제공된 자료의 분량이 많은 경우(수십~수백 페이지 슬라이드나 교재), 절대 특정 단원이나 앞부분에만 치우치지 마세요.
+- 전체 자료의 목차와 주차별 대단원(1주차, 2주차, 3주차...) 흐름을 조망하고, 각 단원별로 골고루 핵심만을 정밀 추출하여 {question_count}문항으로 압축 출제하세요.
+- 단순 지엽적인 문장보다는 '교수님이 중간고사에 반드시 출제하는 핵심 정의', '주요 공식/원가 계산의 원리 및 흐름', '개념 간의 비교 및 차이점'을 집중 타겟팅하세요.
 
 [출제 규칙]
 1. 객관식(multiple_choice):
@@ -248,7 +271,7 @@ def generate_exam():
   "exam_title": "{subject_name} 중간고사 대비 실전 모의고사",
   "subject": "{subject_name}",
   "total_questions": {question_count},
-  "time_limit_minutes": {max(10, question_count * 2)},
+  "time_limit_minutes": {time_limit_minutes},
   "questions": [
     {{
       "id": 1,
@@ -281,7 +304,9 @@ def generate_exam():
         )
 
         exam_data = clean_json_response(response.text)
-        logging.info(f"✅ 시험 출제 완료: 총 {len(exam_data.get('questions', []))}문제")
+        exam_data["time_limit_minutes"] = time_limit_minutes
+        exam_data["total_questions"] = len(exam_data.get("questions", []))
+        logging.info(f"✅ 시험 출제 완료: 총 {len(exam_data.get('questions', []))}문제, 제한시간={time_limit_minutes}분")
         return jsonify({"success": True, "exam": exam_data})
 
     except Exception as e:
