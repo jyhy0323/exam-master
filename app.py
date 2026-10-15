@@ -2,6 +2,10 @@ import os
 import json
 import re
 import logging
+import io
+import requests
+from pypdf import PdfReader
+from bs4 import BeautifulSoup
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 from google import genai
@@ -49,6 +53,107 @@ def health():
         "api_key_configured": bool(GEMINI_API_KEY),
         "model": GEMINI_MODEL
     })
+
+@app.route("/api/extract-pdf", methods=["POST"])
+def extract_pdf():
+    """업로드된 PDF 파일에서 텍스트를 추출하여 반환"""
+    if "file" not in request.files:
+        return jsonify({"success": False, "error": "업로드된 파일이 없습니다."}), 400
+
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"success": False, "error": "선택된 파일이 없습니다."}), 400
+
+    if not file.filename.lower().endswith(".pdf"):
+        return jsonify({"success": False, "error": "PDF 파일만 업로드할 수 있습니다."}), 400
+
+    try:
+        reader = PdfReader(io.BytesIO(file.read()))
+        total_pages = len(reader.pages)
+        extracted_text = []
+
+        # 최대 100페이지까지 텍스트 추출
+        for idx, page in enumerate(reader.pages[:100]):
+            page_text = page.extract_text() or ""
+            if page_text.strip():
+                extracted_text.append(f"--- [페이지 {idx + 1}] ---\n{page_text.strip()}")
+
+        full_text = "\n\n".join(extracted_text)
+        if not full_text.strip():
+            return jsonify({
+                "success": False,
+                "error": "PDF에서 텍스트를 추출할 수 없습니다. (스캔된 이미지 전용 PDF일 수 있습니다)"
+            }), 400
+
+        logging.info(f"📄 PDF 텍스트 추출 완료: {file.filename} (총 {total_pages}페이지, {len(full_text)}자)")
+        return jsonify({
+            "success": True,
+            "filename": file.filename,
+            "total_pages": total_pages,
+            "extracted_length": len(full_text),
+            "text": full_text
+        })
+
+    except Exception as e:
+        logging.error(f"❌ PDF 추출 오류: {e}")
+        return jsonify({"success": False, "error": f"PDF 분석 중 오류가 발생했습니다: {str(e)}"}), 500
+
+@app.route("/api/extract-url", methods=["POST"])
+def extract_url():
+    """웹페이지 링크(URL)에서 핵심 텍스트를 스크랩하여 추출"""
+    data = request.get_json() or {}
+    url = data.get("url", "").strip()
+
+    if not url:
+        return jsonify({"success": False, "error": "URL 주소를 입력해 주세요."}), 400
+
+    if not (url.startswith("http://") or url.startswith("https://")):
+        url = "https://" + url
+
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+        resp = requests.get(url, headers=headers, timeout=10)
+        resp.raise_for_status()
+
+        resp.encoding = resp.apparent_encoding or "utf-8"
+        soup = BeautifulSoup(resp.text, "html.parser")
+
+        # 불필요한 태그 제거 (스크립트, 스타일, 네비게이션, 푸터 등)
+        for tag in soup(["script", "style", "nav", "footer", "header", "noscript", "iframe"]):
+            tag.decompose()
+
+        title = soup.title.string.strip() if soup.title and soup.title.string else "웹페이지 본문"
+        
+        # 본문 텍스트 추출 및 정돈
+        text = soup.get_text(separator="\n")
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        clean_text = "\n".join(lines)
+
+        if len(clean_text) > 30000:
+            clean_text = clean_text[:30000] + "\n...(이하 생략)"
+
+        if len(clean_text) < 50:
+            return jsonify({
+                "success": False,
+                "error": "해당 웹페이지에서 충분한 텍스트 내용을 가져오지 못했습니다. 로그인이 필요한 페이지인지 확인해 주세요."
+            }), 400
+
+        logging.info(f"🔗 URL 웹페이지 추출 완료: {url} (제목: {title}, 길이: {len(clean_text)}자)")
+        return jsonify({
+            "success": True,
+            "title": title,
+            "url": url,
+            "text": clean_text
+        })
+
+    except requests.exceptions.Timeout:
+        return jsonify({"success": False, "error": "해당 링크의 응답 시간이 초과되었습니다 (Timeout)."}), 408
+    except requests.exceptions.RequestException as e:
+        return jsonify({"success": False, "error": f"웹페이지를 불러올 수 없습니다: {str(e)}"}), 400
+    except Exception as e:
+        return jsonify({"success": False, "error": f"웹페이지 분석 중 오류: {str(e)}"}), 500
 
 @app.route("/api/generate", methods=["POST"])
 def generate_exam():

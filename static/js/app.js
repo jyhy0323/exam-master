@@ -29,6 +29,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const questionTypesSelect = document.getElementById("questionTypes");
     const modeRadios = document.querySelectorAll('input[name="mode"]');
 
+    // PDF 및 URL 퀵 임포트 요소
+    const pdfFileInput = document.getElementById("pdfFileInput");
+    const toggleUrlBtn = document.getElementById("toggleUrlBtn");
+    const urlInputRow = document.getElementById("urlInputRow");
+    const webUrlInput = document.getElementById("webUrlInput");
+    const fetchUrlBtn = document.getElementById("fetchUrlBtn");
+    const importStatusPill = document.getElementById("importStatusPill");
+
     // 시험 화면 요소
     const examSubjectPill = document.getElementById("examSubjectPill");
     const examTitleText = document.getElementById("examTitleText");
@@ -96,6 +104,107 @@ document.addEventListener("DOMContentLoaded", () => {
             radio.closest(".radio-card").classList.add("active");
         });
     });
+
+    // 4-1. PDF 파일 자동 추출 핸들러
+    if (pdfFileInput) {
+        pdfFileInput.addEventListener("change", async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            showImportStatus(`📄 [${file.name}] PDF 분석 및 텍스트 추출 중...`, "loading");
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const resp = await fetch("/api/extract-pdf", {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await resp.json();
+
+                if (!resp.ok || !data.success) {
+                    throw new Error(data.error || "PDF 추출 실패");
+                }
+
+                if (lectureNotesInput.value.trim()) {
+                    lectureNotesInput.value += `\n\n[추가 첨부: ${data.filename} (${data.total_pages}페이지)]\n` + data.text;
+                } else {
+                    lectureNotesInput.value = `[첨부: ${data.filename} (${data.total_pages}페이지)]\n` + data.text;
+                }
+
+                showImportStatus(`✅ PDF 추출 성공! (${data.filename}, 총 ${data.total_pages}페이지, 약 ${data.extracted_length}자)`, "success");
+            } catch (err) {
+                showImportStatus(`❌ PDF 오류: ${err.message}`, "error");
+            } finally {
+                pdfFileInput.value = "";
+            }
+        });
+    }
+
+    // 4-2. URL 토글 및 웹 링크 텍스트 추출 핸들러
+    if (toggleUrlBtn && urlInputRow) {
+        toggleUrlBtn.addEventListener("click", () => {
+            urlInputRow.classList.toggle("hidden");
+            if (!urlInputRow.classList.contains("hidden")) {
+                webUrlInput.focus();
+            }
+        });
+    }
+
+    if (fetchUrlBtn && webUrlInput) {
+        fetchUrlBtn.addEventListener("click", async () => {
+            const url = webUrlInput.value.trim();
+            if (!url) {
+                alert("웹페이지 URL 주소를 입력해 주세요.");
+                return;
+            }
+
+            fetchUrlBtn.disabled = true;
+            fetchUrlBtn.textContent = "추출 중...";
+            showImportStatus("🔗 웹페이지 연결 및 본문 스크랩 중...", "loading");
+
+            try {
+                const resp = await fetch("/api/extract-url", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ url: url })
+                });
+                const data = await resp.json();
+
+                if (!resp.ok || !data.success) {
+                    throw new Error(data.error || "웹페이지 추출 실패");
+                }
+
+                if (lectureNotesInput.value.trim()) {
+                    lectureNotesInput.value += `\n\n[웹 링크 추출: ${data.title}]\n` + data.text;
+                } else {
+                    lectureNotesInput.value = `[웹 링크 추출: ${data.title}]\n` + data.text;
+                }
+
+                showImportStatus(`✅ 웹 링크 추출 완료! (${data.title})`, "success");
+                urlInputRow.classList.add("hidden");
+                webUrlInput.value = "";
+            } catch (err) {
+                showImportStatus(`❌ 웹 링크 오류: ${err.message}`, "error");
+            } finally {
+                fetchUrlBtn.disabled = false;
+                fetchUrlBtn.textContent = "본문 추출";
+            }
+        });
+    }
+
+    function showImportStatus(msg, type) {
+        if (!importStatusPill) return;
+        importStatusPill.textContent = msg;
+        importStatusPill.className = `import-status-pill ${type}`;
+        importStatusPill.classList.remove("hidden");
+        if (type === "success") {
+            setTimeout(() => {
+                importStatusPill.classList.add("hidden");
+            }, 6000);
+        }
+    }
 
     // 5. [체험용 샘플 데이터 자동 채우기] 버튼
     loadSampleBtn.addEventListener("click", () => {

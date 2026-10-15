@@ -265,6 +265,127 @@ body {
     color: var(--text-muted);
 }
 
+/* PDF & URL 퀵 툴바 스타일 */
+.quick-import-toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.btn-import-file {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    color: #a5b4fc;
+    padding: 7px 13px;
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-import-file:hover {
+    background: rgba(99, 102, 241, 0.25);
+    color: #ffffff;
+    border-color: #6366f1;
+}
+
+.hidden-file-input {
+    display: none;
+}
+
+.btn-import-url {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #7dd3fc;
+    padding: 7px 13px;
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-import-url:hover {
+    background: rgba(56, 189, 248, 0.22);
+    color: #ffffff;
+    border-color: #38bdf8;
+}
+
+.url-input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    animation: fadeIn 0.2s ease;
+}
+
+.url-input-row.hidden {
+    display: none;
+}
+
+.url-input-row input {
+    flex: 1;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    color: #ffffff;
+    outline: none;
+}
+
+.url-input-row input:focus {
+    border-color: var(--accent-cyan);
+}
+
+.btn-fetch-url {
+    background: #0284c7;
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-fetch-url:hover {
+    background: #0369a1;
+}
+
+.import-status-pill {
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.import-status-pill.success {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    color: #34d399;
+}
+
+.import-status-pill.error {
+    background: rgba(244, 63, 94, 0.15);
+    border: 1px solid rgba(244, 63, 94, 0.35);
+    color: #fb7185;
+}
+
+.import-status-pill.hidden {
+    display: none;
+}
+
 .exam-textarea {
     width: 100%;
     flex: 1;
