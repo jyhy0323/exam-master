@@ -318,6 +318,70 @@ body {
     border-color: #38bdf8;
 }
 
+.practice-url-panel {
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    margin-bottom: 12px;
+    animation: fadeIn 0.2s ease;
+}
+
+.practice-url-panel.hidden {
+    display: none;
+}
+
+.practice-url-panel .url-input-row {
+    margin-bottom: 0;
+}
+
+.dongwon-week-selector {
+    margin-bottom: 10px;
+}
+
+.week-selector-label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #93c5fd;
+    margin-bottom: 7px;
+}
+
+.week-selector-label small {
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.week-chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.week-chip {
+    background: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    color: #cbd5e1;
+    border-radius: 999px;
+    padding: 5px 11px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.week-chip:hover {
+    border-color: #38bdf8;
+    color: #ffffff;
+}
+
+.week-chip.active {
+    background: linear-gradient(135deg, #0284c7, #4f46e5);
+    border-color: #38bdf8;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
+}
+
 .url-input-row {
     display: flex;
     gap: 8px;
@@ -353,6 +417,7 @@ body {
     font-size: 0.82rem;
     font-weight: 700;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 .btn-fetch-url:hover {

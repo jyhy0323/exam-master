@@ -329,34 +329,74 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 4-3. 참여 웹 퀴즈 족보 링크 추출 핸들러 (dongwonlab.com 등)
+    // 4-3. 참여 웹 퀴즈 족보 링크 추출 핸들러 (dongwonlab.com 1~5주차 선택 지원)
+    const dongwonWeekChips = document.querySelectorAll("#dongwonWeekChips .week-chip");
+
+    function getSelectedDongwonWeeks() {
+        const allChip = document.querySelector('#dongwonWeekChips .week-chip[data-week="all"]');
+        if (!dongwonWeekChips.length || (allChip && allChip.classList.contains("active"))) {
+            return ["all"];
+        }
+        const selected = [];
+        dongwonWeekChips.forEach(chip => {
+            if (chip.dataset.week !== "all" && chip.classList.contains("active")) {
+                selected.push(chip.dataset.week);
+            }
+        });
+        return selected.length > 0 ? selected : ["all"];
+    }
+
+    if (dongwonWeekChips.length > 0) {
+        const allChip = document.querySelector('#dongwonWeekChips .week-chip[data-week="all"]');
+        const indivChips = Array.from(dongwonWeekChips).filter(c => c.dataset.week !== "all");
+
+        dongwonWeekChips.forEach(chip => {
+            chip.addEventListener("click", () => {
+                if (chip.dataset.week === "all") {
+                    indivChips.forEach(c => c.classList.remove("active"));
+                    allChip.classList.add("active");
+                } else {
+                    if (allChip) allChip.classList.remove("active");
+                    chip.classList.toggle("active");
+
+                    const activeIndiv = indivChips.filter(c => c.classList.contains("active"));
+                    if (activeIndiv.length === 0 || activeIndiv.length === indivChips.length) {
+                        indivChips.forEach(c => c.classList.remove("active"));
+                        if (allChip) allChip.classList.add("active");
+                    }
+                }
+            });
+        });
+    }
+
     if (togglePracticeUrlBtn && practiceUrlInputRow) {
         togglePracticeUrlBtn.addEventListener("click", () => {
             practiceUrlInputRow.classList.toggle("hidden");
             if (!practiceUrlInputRow.classList.contains("hidden")) {
-                practiceWebUrlInput.value = "http://dongwonlab.com";
-                practiceWebUrlInput.focus();
+                if (!practiceWebUrlInput.value.trim()) {
+                    practiceWebUrlInput.value = "http://dongwonlab.com";
+                }
             }
         });
     }
 
     if (fetchPracticeUrlBtn && practiceWebUrlInput) {
         fetchPracticeUrlBtn.addEventListener("click", async () => {
-            const url = practiceWebUrlInput.value.trim();
-            if (!url) {
-                alert("교수님 참여 웹 주소를 입력해 주세요 (예: http://dongwonlab.com)");
-                return;
-            }
+            const url = practiceWebUrlInput.value.trim() || "http://dongwonlab.com";
+            const selectedWeeks = getSelectedDongwonWeeks();
 
             fetchPracticeUrlBtn.disabled = true;
             fetchPracticeUrlBtn.textContent = "추출 중...";
-            showPracticeImportStatus("🔗 참여 웹사이트 연결 및 퀴즈 족보 분석 중...", "loading");
+            showPracticeImportStatus("🔗 동원랩 퀴즈 족보 데이터 불러오는 중...", "loading");
 
             try {
                 const resp = await fetch("/api/extract-url", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ url: url })
+                    body: JSON.stringify({
+                        url: url,
+                        weeks: selectedWeeks
+                    })
                 });
                 const data = await resp.json();
 
@@ -364,10 +404,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     throw new Error(data.error || "퀴즈 족보 추출 실패");
                 }
 
-                if (practiceProblemsInput.value.trim()) {
-                    practiceProblemsInput.value += `\n\n[추출 족보: ${data.title}]\n` + data.text;
-                } else {
+                // 기존에 추출된 동원랩 족보가 있으면 선택한 주차 내용으로 깔끔하게 교체
+                const currentText = practiceProblemsInput.value.trim();
+                if (!currentText || currentText.startsWith("[추출 족보:") || currentText.startsWith("[웹 퀴즈 족보:")) {
                     practiceProblemsInput.value = `[추출 족보: ${data.title}]\n` + data.text;
+                } else {
+                    practiceProblemsInput.value = currentText + `\n\n[추출 족보: ${data.title}]\n` + data.text;
                 }
 
                 if (data.subject && subjectNameInput) {
@@ -382,13 +424,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     hitFocusRadio.closest(".radio-card").classList.add("active");
                 }
 
-                showPracticeImportStatus(`🎉 ${data.title} 추출 완료! 족보 적중 모드가 활성화되었습니다.`, "success");
-                practiceUrlInputRow.classList.add("hidden");
+                showPracticeImportStatus(`🎉 ${data.title} 추출 완료! 다른 주차를 선택해 다시 누르면 해당 주차로 변경됩니다.`, "success");
             } catch (err) {
                 showPracticeImportStatus(`❌ 족보 추출 오류: ${err.message}`, "error");
             } finally {
                 fetchPracticeUrlBtn.disabled = false;
-                fetchPracticeUrlBtn.textContent = "퀴즈 족보 추출";
+                fetchPracticeUrlBtn.textContent = "선택 주차 족보 추출";
             }
         });
     }

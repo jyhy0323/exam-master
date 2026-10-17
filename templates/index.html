@@ -109,10 +109,23 @@
                             </button>
                         </div>
 
-                        <!-- 참여 웹 링크 입력 팝업 바 (토글) -->
-                        <div id="practiceUrlInputRow" class="url-input-row hidden">
-                            <input type="url" id="practiceWebUrlInput" placeholder="http://dongwonlab.com 또는 학생 모드 주소 입력">
-                            <button type="button" id="fetchPracticeUrlBtn" class="btn-fetch-url">퀴즈 족보 추출</button>
+                        <!-- 참여 웹 링크 입력 및 1~5주차 선택 팝업 바 (토글) -->
+                        <div id="practiceUrlInputRow" class="practice-url-panel hidden">
+                            <div class="dongwon-week-selector">
+                                <span class="week-selector-label">📅 추출할 주차 선택 <small>(복수 선택 가능)</small></span>
+                                <div id="dongwonWeekChips" class="week-chip-group">
+                                    <button type="button" class="week-chip active" data-week="all">전체 (1~5주차)</button>
+                                    <button type="button" class="week-chip" data-week="1주차">1주차</button>
+                                    <button type="button" class="week-chip" data-week="2주차">2주차</button>
+                                    <button type="button" class="week-chip" data-week="3주차">3주차</button>
+                                    <button type="button" class="week-chip" data-week="4주차">4주차</button>
+                                    <button type="button" class="week-chip" data-week="5주차">5주차</button>
+                                </div>
+                            </div>
+                            <div class="url-input-row">
+                                <input type="url" id="practiceWebUrlInput" placeholder="http://dongwonlab.com 또는 학생 모드 주소 입력" value="http://dongwonlab.com">
+                                <button type="button" id="fetchPracticeUrlBtn" class="btn-fetch-url">선택 주차 족보 추출</button>
+                            </div>
                         </div>
 
                         <div id="practiceImportStatusPill" class="import-status-pill hidden"></div>

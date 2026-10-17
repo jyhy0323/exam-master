@@ -143,11 +143,198 @@ def extract_pdf():
         logging.error(f"❌ PDF 추출 오류: {e}")
         return jsonify({"success": False, "error": f"PDF 분석 중 오류가 발생했습니다: {str(e)}"}), 500
 
+DONGWONLAB_FALLBACK_QUIZZES = [
+    {
+        "id": "quiz_cost_w1_q1",
+        "course": "원가회계",
+        "session": "1주차",
+        "question": "옳은 것은?",
+        "options": [
+            "비용은 특정 자원을 위해 발생하는 유출이다.",
+            "원가는 수익을 얻는 과정에서 소멸된 비용이다.",
+            "원가대상은 원가를 계산하고 집계하는 단위이다.",
+            "총원가는 재료원가, 노무원가, 경비의 합이다."
+        ],
+        "answer": "3. 원가대상은 원가를 계산하고 집계하는 단위이다. (또는 4. 제조원가의 3요소는 재료원가, 노무원가, 제조경비)"
+    },
+    {
+        "id": "quiz_cost_w1_q2",
+        "course": "원가회계",
+        "session": "1주차",
+        "question": "다음 중 틀린 것은?",
+        "options": [
+            "활동에 따라 제조원가와 비제조원가를 구분한다",
+            "원가의 추적가능성에 따라 직접원가와 간접원가를 구분한다",
+            "원가행태에 따라 변동원가와 고정원가를 구분한다",
+            "재무회계와 관리회계 모두 내부 의사결정 목적으로 작성한다"
+        ],
+        "answer": "4. 재무회계와 관리회계 모두 내부 의사결정 목적으로 작성한다 (재무회계는 외부정보이용자 목적, 관리회계가 내부 의사결정 목적)"
+    },
+    {
+        "id": "quiz_cost_w2_draft_1",
+        "course": "원가회계",
+        "session": "2주차",
+        "question": "Q1 다음 중 의사결정에 영향을 미치는 원가가 아닌 것은?",
+        "options": [
+            "관련원가",
+            "기발생원가",
+            "기회원가",
+            "관련원가와 기회원가 모두"
+        ],
+        "answer": "2. 기발생원가 (매몰원가/기발생원가는 과거에 이미 발생한 원가로 의사결정에 영향을 미치지 않는 비관련원가임)"
+    },
+    {
+        "id": "quiz_1789398868577_6423",
+        "course": "원가회계",
+        "session": "2주차",
+        "question": "제조원가명세서에 관한 설명으로 틀린 것은?",
+        "options": [
+            "직접재료원가(DM), 직접노무원가(DL), 제조간접원가(OH)의 합계는 당기총제조원가이다.",
+            "기초재공품에 당기총제조원가를 더하면 당기에 완성할 수 있는 재공품의 총원가가 된다.",
+            "당기총제조원가에 기말재공품을 더하고 기초재공품을 차감하면 당기제품제조원가가 된다.",
+            "기말재공품에 포함된 제조원가는 당기제품제조원가에서 제외된다."
+        ],
+        "answer": "3. 당기총제조원가에 기초재공품을 더하고 기말재공품을 차감해야 당기제품제조원가가 된다."
+    },
+    {
+        "id": "quiz_1789399375936_d874",
+        "course": "원가회계",
+        "session": "2주차",
+        "question": "다음 중 틀린 것은?",
+        "options": [
+            "당기총제조원가는 당기에 투입된 생산요소(input)의 원가이다.",
+            "당기제품제조원가는 당기에 완성된 제품(output)의 원가이다.",
+            "제조원가명세서는 제조원가의 세부 금액과 원가 흐름을 보여 주는 부속명세서로 상장기업에는 공시 의무가 있다.",
+            "제조경비는 제조원가 중에서 재료원가와 노무원가를 제외한 나머지 원가이다."
+        ],
+        "answer": "3. K-IFRS에서 제조원가명세서는 의무 공시 재무제표가 아니다."
+    },
+    {
+        "id": "quiz_1790005616504_3821",
+        "course": "원가회계",
+        "session": "3주차",
+        "question": "개별원가계산에 관한 설명으로 옳지 않은 것은?",
+        "options": [
+            "건설업이나 조선업처럼 작업(주문)별로 제품 규격이 달라 원가가 서로 다른 경우에 적합함",
+            "직접재료원가와 직접노무원가는 각 작업에 직접 추적하여 개별작업원가표에 기록하고, 제조간접원가는 배부기준에 따라 각 작업에 배부함",
+            "법률·회계 자문 등 서비스업에서는 재공품이나 제품 같은 재고자산이 남지 않는 기간원가이므로, 주로 의사결정과 수익성 분석에 활용됨",
+            "개별원가계산은 원가의 집계 방법에 따른 분류이므로, 실제원가계산이나 정상원가계산과 함께 사용할 수 없음"
+        ],
+        "answer": "4. 개별원가계산은 원가의 측정 방법에 따라 실제개별원가계산과 정상개별원가계산으로 결합하여 사용한다."
+    },
+    {
+        "id": "quiz_1790006042384_494d",
+        "course": "원가회계",
+        "session": "3주차",
+        "question": "다음은 제조간접원가 배부에 필요한 배부기준 선택기준에 관한 설명이다. 틀린 것은?",
+        "options": [
+            "인과관계기준을 가장 타당하여 우선 적용함. 인과관계를 찾기 어려울 때는 수혜기준을 적용함. 단, 수혜기준은 원가배부 결과가 왜곡되거나 경영자의 자의성이 개입될 수 있다는 한계가 있음",
+            "원가대상이 제조간접원가로부터 제공받은 경제적 효익에 비례하여 배부함 - 수혜기준",
+            "원가대상의 수익이나 급여 등 원가를 부담할 수 있는 정도에 비례하여 배부함 - 부담능력기준",
+            "동력비와 같이 작업시간이나 기계가동시간에 비례하여 배부함 - 인과관계기준"
+        ],
+        "answer": "1. 원가배부 결과가 왜곡되거나 세금/보조금 등 부담능력에 따라 왜곡될 수 있는 한계는 부담능력기준에 관한 설명이다."
+    },
+    {
+        "id": "quiz_1790006130183_e6b4",
+        "course": "원가회계",
+        "session": "3주차",
+        "question": "실제개별원가계산에 관한 설명으로 옳지 않은 것은?",
+        "options": [
+            "직접노무원가는 작업이 진행됨에 따라 발생 즉시 집계하므로, 회계기간이 끝나기 전에도 개별 작업의 직접원가는 확인할 수 있음",
+            "제조간접원가는 실제 발생액을 제조간접원가 계정의 차변에 집계하였다가, 배부율을 곱한 금액을 재공품 계정으로 대체함",
+            "보통 1개월 단위로 계산하면, 1년 단위로 계산할 때보다 제조간접원가 배부율이 평준화되어 작업별 원가의 기간별 비교가 쉬워짐",
+            "보통 1개월 단위로 계산하면, 계절적 요인이나 조업도 증감에 따라 제조간접원가 배부율의 변동 폭이 커질 수 있음"
+        ],
+        "answer": "3. 1개월 단위로 실제원가계산을 하면 계절적 요인과 조업도 변동으로 인해 배부율이 매달 크게 변동하여 기간별 비교가 어려워진다 (1년 단위 예정배부율을 써야 평준화됨)."
+    },
+    {
+        "id": "quiz_1790689931546_bcd9",
+        "course": "원가회계",
+        "session": "4주차",
+        "question": "정상개별원가계산에 관한 설명으로 옳지 않은 것은?",
+        "options": [
+            "직접재료원가와 직접노무원가는 실제발생액을 기준으로 집계함",
+            "제조간접원가는 기초에 예측한 연간 제조간접원가 예산과 연간 예정배부기준을 바탕으로 예정배부율을 계산하여 배부함",
+            "개별 작업에 배부할 제조간접원가는 실제배부기준에 예정배부율을 곱하여 계산함",
+            "실제원가계산에 비해 작업이 완료되는 시점에 제조간접원가 실제발생액을 바로 파악할 수 있어 지체 없이 제품원가를 확정함"
+        ],
+        "answer": "4. 정상개별원가계산은 작업 완료 시점에 실제발생액이 아니라 예정배부율을 적용하여 제품원가를 신속히 계산하며, 실제발생액은 기말에 파악된다."
+    },
+    {
+        "id": "quiz_1790690009455_70c2",
+        "course": "원가회계",
+        "session": "4주차",
+        "question": "제조간접원가 배부차이에 관한 설명으로 옳은 것은?",
+        "options": [
+            "제조간접원가 예정배부액이 실제발생액보다 크면 과소배부라 함",
+            "과대배부가 발생한 경우, 원가배부차이를 조정하면 매출원가가 감소함",
+            "과소배부가 발생한 경우, 이를 조정하면 재고자산과 매출원가가 감소함",
+            "배부차이는 예정제조간접원가와 실제제조간접원가 총액이 다를 때만 발생하고, 배부기준량의 차이와는 무관함"
+        ],
+        "answer": "2. 과대배부(예정배부액 > 실제발생액)가 발생하면 원가가 과대계산된 것이므로 조정 시 재고자산·매출원가를 하향 조정(감소)한다."
+    },
+    {
+        "id": "quiz_1790690063952_8d9e",
+        "course": "원가회계",
+        "session": "4주차",
+        "question": "제조간접원가 배부차이 조정방법에 관한 설명으로 옳지 않은 것은?",
+        "options": [
+            "매출원가조정법은 계산이 간편하지만, 배부차이가 크면 손익이 왜곡될 수 있음",
+            "기말잔액 비례배분법은 기말잔액에 기존 예정배부액이 포함되어 있어 배부차이를 이중으로 가중치 부여하는 한계가 있음",
+            "원가요소별 비례배분법은 기말재공품, 기말제품, 매출원가에 포함된 당기 제조간접원가 예정배부액 비율로 안분하므로 가장 정교한 방법임",
+            "어떤 배부차이 조정방법을 사용하더라도 재공품·제품·매출원가에 배분되는 실제 제조간접원가의 총액은 달라짐"
+        ],
+        "answer": "4. 어떤 배부차이 조정방법을 사용하더라도 기말재공품·기말제품·매출원가에 배분된 후의 전체 실제 제조간접원가 총액 합계는 동일하다."
+    },
+    {
+        "id": "quiz_1791200637197_e723",
+        "course": "원가회계",
+        "session": "5주차",
+        "question": "종합원가계산에 관한 설명으로 옳지 않은 것은?",
+        "options": [
+            "동질적인 제품을 연속적으로 대량생산하는 업종에 적합하며, 공정별·기간별로 원가를 집계하여 계산함",
+            "완성품환산량은 투입된 원가요소별로 완성도를 적용하여 산정하며, 원가요소별로 완성도가 다를 수 있음",
+            "직접재료가 공정 초기에 전량 투입되는 경우, 기말재공품의 직접재료원가 완성도는 가공비 완성도와 같음",
+            "가공원가는 직접노무원가와 제조간접원가를 합한 원가로, 전환원가라고도 부름"
+        ],
+        "answer": "3. 직접재료가 공정 초기에 전량 투입되면 기말재공품의 직접재료원가 완성도는 100%가 되며, 공정 전반에 균등 발생하는 가공원가 완성도와 다르다."
+    },
+    {
+        "id": "quiz_1791200696105_633c",
+        "course": "원가회계",
+        "session": "5주차",
+        "question": "가중평균법과 선입선출법에 관한 설명으로 옳은 것은?",
+        "options": [
+            "가중평균법은 기초재공품원가를 제외하고 당기발생원가만으로 환산량 단위당 원가를 계산함",
+            "기초재공품이 없는 경우, 두 방법으로 계산한 완성품원가와 기말재공품원가는 서로 같음",
+            "선입선출법의 완성품환산량은 당기완성품 수량에 기말재공품 환산량을 더한 것임",
+            "선입선출법에서는 기초재공품원가가 완성품과 기말재공품에 환산량 비율로 배분됨"
+        ],
+        "answer": "2. 기초재공품이 없는 경우에는 가중평균법과 선입선출법으로 계산한 완성품원가와 기말재공품원가가 서로 완전히 동일하다."
+    },
+    {
+        "id": "quiz_1791200786234_6bf9",
+        "course": "원가회계",
+        "session": "5주차",
+        "question": "제조원가가 계속 상승하는 상황에서 가중평균법과 선입선출법을 비교한 설명으로 옳지 않은 것은? (단, 기초재공품이 존재함)",
+        "options": [
+            "기말재공품원가는 선입선출법이 가중평균법보다 큼",
+            "매출원가는 선입선출법이 가중평균법보다 작음",
+            "선입선출법은 기말재공품에 최근 원가가 반영되어 재고자산 평가가 현실적임",
+            "매출총이익과 법인세는 선입선출법이 가중평균법보다 작음"
+        ],
+        "answer": "4. 원가 상승 시 선입선출법은 매출원가가 가중평균법보다 작으므로, 매출총이익과 법인세는 선입선출법이 가중평균법보다 크다."
+    }
+]
+
+
 @app.route("/api/extract-url", methods=["POST"])
 def extract_url():
     """웹페이지 링크(URL)에서 핵심 텍스트를 스크랩하여 추출"""
     data = request.get_json() or {}
     url = data.get("url", "").strip()
+    selected_weeks = data.get("weeks", [])  # 예: ["1주차", "2주차"] 또는 빈 리스트(전체)
 
     if not url:
         return jsonify({"success": False, "error": "URL 주소를 입력해 주세요."}), 400
@@ -160,37 +347,68 @@ def extract_url():
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
 
-        # dongwonlab.com 특화 처리: API를 통해 1~5주차 실시간 퀴즈 15문항 직접 추출
-        if "dongwonlab.com" in url:
+        # dongwonlab.com 특화 처리: 실시간 서버 조회 + 502 에러 시 내장 백업 DB 자동 폴백 + 주차별 선택 필터링
+        if "dongwonlab" in url.lower():
+            quizzes = []
+            used_fallback = False
             try:
-                api_resp = requests.get("http://dongwonlab.com/api/courses", headers=headers, timeout=10)
+                api_resp = requests.get("http://dongwonlab.com/api/courses", headers=headers, timeout=4)
                 if api_resp.status_code == 200:
                     api_data = api_resp.json()
-                    quizzes = api_data.get("active_quizzes", [])
-                    if quizzes:
-                        quiz_blocks = []
-                        for idx, q in enumerate(quizzes, 1):
-                            course = q.get("course", "원가회계")
-                            session = q.get("session", "")
-                            quest = q.get("question", "")
-                            options = q.get("options", [])
-                            opt_str = "\n".join([f"  {i+1}. {opt}" for i, opt in enumerate(options)])
-                            quiz_blocks.append(
-                                f"[동원랩 실시간 퀴즈 {idx}] ({course} - {session})\n문제: {quest}\n선택지:\n{opt_str}"
-                            )
-                        
-                        full_dongwon_text = "\n\n".join(quiz_blocks)
-                        logging.info(f"🎯 dongwonlab.com 퀴즈 {len(quizzes)}개 특화 추출 성공!")
-                        return jsonify({
-                            "success": True,
-                            "is_dongwonlab": True,
-                            "target_field": "practice_problems",
-                            "subject": "원가회계 (1~5주차 교수님 퀴즈 족보)",
-                            "title": f"동원랩 실시간 퀴즈 족보 (총 {len(quizzes)}문항)",
-                            "text": full_dongwon_text
-                        })
+                    live_quizzes = api_data.get("active_quizzes", [])
+                    if live_quizzes:
+                        quizzes = [q for q in live_quizzes if q.get("course", "원가회계") == "원가회계"] or live_quizzes
             except Exception as e:
-                logging.warning(f"dongwonlab API 추출 시도 중 예외: {e}")
+                logging.warning(f"dongwonlab 실시간 서버 접속 예외 (내장 백업으로 자동 전환): {e}")
+
+            if not quizzes:
+                quizzes = list(DONGWONLAB_FALLBACK_QUIZZES)
+                used_fallback = True
+                logging.info("🛡️ dongwonlab 서버 응답 지연/502 감지 -> 내장된 1~5주차 원가회계 퀴즈 백업 데이터를 사용합니다.")
+
+            # 주차별 필터링 적용
+            valid_weeks = [w.strip() for w in selected_weeks if isinstance(w, str) and w.strip() and w.strip() != "all"]
+            if valid_weeks:
+                filtered_quizzes = [q for q in quizzes if q.get("session", "") in valid_weeks]
+                week_label = ", ".join(valid_weeks)
+            else:
+                filtered_quizzes = quizzes
+                week_label = "1~5주차 전체"
+
+            if not filtered_quizzes:
+                return jsonify({
+                    "success": False,
+                    "error": f"선택하신 주차({week_label})에 해당하는 동원랩 퀴즈가 없습니다."
+                }), 400
+
+            quiz_blocks = []
+            for idx, q in enumerate(filtered_quizzes, 1):
+                course = q.get("course", "원가회계")
+                session = q.get("session", "")
+                quest = q.get("question", "")
+                options = q.get("options", [])
+                answer_info = q.get("answer", "")
+                opt_str = "\n".join([f"  {i+1}. {opt}" for i, opt in enumerate(options)])
+                block = f"[동원랩 퀴즈 {idx}] ({course} - {session})\n문제: {quest}\n선택지:\n{opt_str}"
+                if answer_info:
+                    block += f"\n정답 및 핵심해설: {answer_info}"
+                quiz_blocks.append(block)
+
+            full_dongwon_text = "\n\n".join(quiz_blocks)
+            source_note = "내장 백업본" if used_fallback else "실시간 서버"
+            logging.info(f"🎯 dongwonlab.com 퀴즈 추출 성공! ({week_label}, {len(filtered_quizzes)}문항, 출처: {source_note})")
+            return jsonify({
+                "success": True,
+                "is_dongwonlab": True,
+                "used_fallback": used_fallback,
+                "selected_weeks": valid_weeks if valid_weeks else ["1주차", "2주차", "3주차", "4주차", "5주차"],
+                "week_label": week_label,
+                "quiz_count": len(filtered_quizzes),
+                "target_field": "practice_problems",
+                "subject": f"원가회계 ({week_label} 교수님 퀴즈 족보)",
+                "title": f"동원랩 원가회계 퀴즈 족보 [{week_label}] (총 {len(filtered_quizzes)}문항)",
+                "text": full_dongwon_text
+            })
 
         resp = requests.get(url, headers=headers, timeout=10)
         resp.raise_for_status()
