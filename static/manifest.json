@@ -1,0 +1,18 @@
+{
+  "name": "Exam Master - AI 기출 & 모의시험",
+  "short_name": "ExamMaster",
+  "description": "교수님 강의 자료와 웹 연습문제로 실전 모의고사를 만드는 AI 앱",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
