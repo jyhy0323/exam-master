@@ -548,14 +548,14 @@ def generate_exam():
    - 질문은 단답형으로 떨어질 수 있게 명확해야 합니다 (예: "~하는 기법의 명칭은 무엇인가?", "~에 들어갈 핵심 용어를 쓰시오").
    - correct_answer는 대표 모범 정답입니다.
    - keywords에는 대소문자, 한글/영문 표기 차이 등을 감안하여 채점에 필요한 핵심 키워드 리스트를 2~4개 작성하세요 (예: ["객체지향", "OOP", "Object-Oriented"]).
-3. explanation(해설):
-   - 왜 정답 선지가 정답인지뿐만 아니라, 나머지 보기들(1~5번)이 각각 왜 옳거나 틀린지 선지별 분석을 친절하고 명쾌하게 설명합니다.
-   - 계산 문제인 경우 반드시 [단계별 계산 풀이]를 포함하세요.
-   - "시험 꿀팁"을 한 줄 덧붙여주세요.
+3. explanation(해설 - ★반드시 correct_answer보다 먼저 작성하여 계산 검산 완료 후 정답 확정★):
+   - JSON 출력 시 반드시 `explanation` 필드를 `correct_answer` 필드보다 먼저 작성하세요!
+   - `explanation`에서 1단계, 2단계, 3단계 수식과 계산을 끝까지 먼저 전개하여 정확한 수치를 도출한 뒤, 그 결과와 일치하는 보기를 `correct_answer`에 넣으세요.
+   - 해설 문장에는 '잠시만요', '이 아니라' 같은 혼잣말이나 시행착오 과정을 절대 적지 말고, 깔끔하게 검증 완료된 정석 풀이 과정과 1~5번 선지 분석, "시험 꿀팁"만 명확히 서술하세요.
 4. source_tag:
    - 이 문제가 어디서 유래했는지 표기합니다 (예: "교수님 참여웹 3강 연습문제 변형", "강의 슬라이드 2장 핵심 정의").
 
-반드시 아래 JSON 형식으로만 응답하세요. 백틱(`) 마크다운 코드블록이나 불필요한 설명 없이 순수 JSON 텍스트만 출력하세요:
+반드시 아래 JSON 형식으로만 응답하세요 (`explanation`을 먼저 작성하여 계산을 끝낸 뒤 `correct_answer`를 확정하는 순서를 엄격히 지키세요). 백틱(`) 마크다운 코드블록이나 불필요한 설명 없이 순수 JSON 텍스트만 출력하세요:
 {{
   "exam_title": "{subject_name} 중간고사 대비 실전 모의고사",
   "subject": "{subject_name}",
@@ -573,9 +573,9 @@ def generate_exam():
         "3. 보기 내용",
         "4. 보기 내용"
       ],
+      "explanation": "[단계별 계산 풀이 및 선지 분석] 먼저 정확히 계산하고 검증한 해설 내용...",
       "correct_answer": "1. 보기 내용",
       "keywords": [],
-      "explanation": "정답 해설 및 시험 꿀팁...",
       "source_tag": "교수님 참여웹 연습문제 변형",
       "difficulty": "중"
     }}
@@ -586,6 +586,7 @@ def generate_exam():
 1. 유효한 단 하나의 JSON 객체만을 출력하세요. 백틱이나 불필요한 설명은 금지합니다.
 2. 문자열 내부(질문, 보기, 해설 등)에서 회사명이나 인용구를 쓸 때는 큰따옴표(") 대신 반드시 작은따옴표(')를 사용하세요. (예: '(주)대한'처럼 작성)
 3. 배열이나 객체의 마지막 원소 뒤에 쉼표(Trailing comma)를 절대 붙이지 마세요.
+4. `correct_answer`는 반드시 `explanation`에서 도출한 최종 계산 결과 및 정답 번호와 100% 일치해야 합니다.
 """
 
         response = client.models.generate_content(
@@ -599,6 +600,25 @@ def generate_exam():
         )
 
         exam_data = clean_json_response(response.text)
+
+        # 후처리 검증: 해설(explanation)에서 최종 선언한 정답 번호와 correct_answer 불일치 시 자동 교정
+        for q in exam_data.get("questions", []):
+            if q.get("type") == "multiple_choice" and q.get("options"):
+                exp_text = str(q.get("explanation", ""))
+                cur_ans = str(q.get("correct_answer", "")).strip()
+                options = [str(o).strip() for o in q.get("options", [])]
+
+                # 해설 후반부에서 "정답은 N번", "최종 정답: N번", "정답: N번" 패턴 탐색
+                matches = re.findall(r"(?:최종\s*정답|따라서\s*정답|정답)\s*(?:은|은\s*바로|:|은\s*보기)?\s*([1-5])\s*번", exp_text)
+                if matches:
+                    declared_num = matches[-1]  # 가장 마지막에 선언된 최종 정답 번호
+                    if not cur_ans.startswith(f"{declared_num}."):
+                        for opt in options:
+                            if opt.startswith(f"{declared_num}."):
+                                logging.info(f"🔧 [자동 교정] 문항 Q{q.get('id')}: 해설 결론({declared_num}번)에 맞춰 correct_answer를 '{cur_ans}' -> '{opt}'로 자동 수정했습니다.")
+                                q["correct_answer"] = opt
+                                break
+
         exam_data["time_limit_minutes"] = time_limit_minutes
         exam_data["total_questions"] = len(exam_data.get("questions", []))
         logging.info(f"✅ 시험 출제 완료: 총 {len(exam_data.get('questions', []))}문제, 제한시간={time_limit_minutes}분")
