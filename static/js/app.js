@@ -229,37 +229,129 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 4-1. PDF 파일 자동 추출 핸들러
+    // 4-1. PDF 파일 자동 추출 핸들러 (브라우저 PDF.js 직접 추출 + 서버 폴백 이중 엔진)
+    if (window.pdfjsLib) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    }
+
+    async function extractPdfInBrowser(file, onProgress) {
+        if (!window.pdfjsLib) {
+            throw new Error("PDF.js 라이브러리가 로드되지 않았습니다.");
+        }
+        const arrayBuffer = await file.arrayBuffer();
+        const loadingTask = window.pdfjsLib.getDocument({
+            data: arrayBuffer,
+            cMapUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/",
+            cMapPacked: true
+        });
+        const pdfDoc = await loadingTask.promise;
+        const totalPages = pdfDoc.numPages;
+        const extractedPages = [];
+
+        for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+            if (onProgress && (pageNum === 1 || pageNum % 5 === 0 || pageNum === totalPages)) {
+                onProgress(pageNum, totalPages);
+            }
+            const page = await pdfDoc.getPage(pageNum);
+            const textContent = await page.getTextContent();
+            let lastY = null;
+            let pageLines = [];
+            let currentLine = "";
+
+            for (const item of textContent.items) {
+                const str = item.str || "";
+                const y = item.transform ? Math.round(item.transform[5]) : null;
+                if (lastY !== null && y !== null && Math.abs(y - lastY) > 4) {
+                    if (currentLine.trim()) pageLines.push(currentLine.trim());
+                    currentLine = str;
+                } else {
+                    currentLine += (currentLine && !currentLine.endsWith(" ") && !str.startsWith(" ") ? " " : "") + str;
+                }
+                if (y !== null) lastY = y;
+            }
+            if (currentLine.trim()) pageLines.push(currentLine.trim());
+
+            const cleaned = pageLines.join("\n").trim();
+            if (cleaned) {
+                extractedPages.push(`--- [페이지 ${pageNum}] ---\n${cleaned}`);
+            }
+        }
+
+        const fullText = extractedPages.join("\n\n");
+        if (!fullText.trim()) {
+            throw new Error("PDF에서 텍스트를 추출할 수 없습니다. (스캔된 이미지 전용 PDF일 수 있습니다)");
+        }
+        return {
+            filename: file.name,
+            total_pages: totalPages,
+            extracted_length: fullText.length,
+            text: fullText
+        };
+    }
+
     if (pdfFileInput) {
         pdfFileInput.addEventListener("change", async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+            const files = Array.from(e.target.files || []);
+            if (!files.length) return;
 
-            showImportStatus(`📄 [${file.name}] PDF 분석 및 텍스트 추출 중...`, "loading");
-
-            const formData = new FormData();
-            formData.append("file", file);
+            let totalExtractedFiles = 0;
+            let totalPagesSum = 0;
+            let totalCharsSum = 0;
 
             try {
-                const resp = await fetch("/api/extract-pdf", {
-                    method: "POST",
-                    body: formData
-                });
-                const data = await resp.json();
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const prefix = files.length > 1 ? `(${i + 1}/${files.length}) ` : "";
+                    showImportStatus(`📄 ${prefix}[${file.name}] PDF 텍스트 고속 추출 중...`, "loading");
 
-                if (!resp.ok || !data.success) {
-                    throw new Error(data.error || "PDF 추출 실패");
+                    let data = null;
+
+                    // 1차: 브라우저 내장 PDF.js로 즉시 추출 (용량 제한 없음, 네트워크 업로드 지연 없음)
+                    try {
+                        data = await extractPdfInBrowser(file, (curPage, maxPage) => {
+                            showImportStatus(`📄 ${prefix}[${file.name}] 분석 중... (${curPage} / ${maxPage} 페이지)`, "loading");
+                        });
+                    } catch (clientErr) {
+                        console.warn("브라우저 PDF 추출 폴백 -> 서버 API 시도:", clientErr);
+                        // 스캔본 에러는 바로 표시
+                        if (clientErr.message && clientErr.message.includes("스캔된 이미지")) {
+                            throw clientErr;
+                        }
+                        // 2차 폴백: 서버 /api/extract-pdf 호출
+                        const formData = new FormData();
+                        formData.append("file", file);
+                        const resp = await fetch("/api/extract-pdf", {
+                            method: "POST",
+                            body: formData
+                        });
+                        const serverData = await resp.json();
+                        if (!resp.ok || !serverData.success) {
+                            throw new Error(serverData.error || "PDF 추출 실패");
+                        }
+                        data = serverData;
+                    }
+
+                    if (lectureNotesInput.value.trim()) {
+                        lectureNotesInput.value += `\n\n[추가 첨부: ${data.filename} (${data.total_pages}페이지)]\n` + data.text;
+                    } else {
+                        lectureNotesInput.value = `[첨부: ${data.filename} (${data.total_pages}페이지)]\n` + data.text;
+                    }
+
+                    totalExtractedFiles++;
+                    totalPagesSum += data.total_pages;
+                    totalCharsSum += data.extracted_length;
                 }
 
-                if (lectureNotesInput.value.trim()) {
-                    lectureNotesInput.value += `\n\n[추가 첨부: ${data.filename} (${data.total_pages}페이지)]\n` + data.text;
+                if (totalExtractedFiles === 1) {
+                    showImportStatus(`✅ PDF 추출 성공! (${files[0].name}, 총 ${totalPagesSum}페이지, 약 ${totalCharsSum.toLocaleString()}자)`, "success");
                 } else {
-                    lectureNotesInput.value = `[첨부: ${data.filename} (${data.total_pages}페이지)]\n` + data.text;
+                    showImportStatus(`✅ PDF ${totalExtractedFiles}개 추출 성공! (총 ${totalPagesSum}페이지, 약 ${totalCharsSum.toLocaleString()}자)`, "success");
                 }
-
-                showImportStatus(`✅ PDF 추출 성공! (${data.filename}, 총 ${data.total_pages}페이지, 약 ${data.extracted_length}자)`, "success");
             } catch (err) {
-                showImportStatus(`❌ PDF 오류: ${err.message}`, "error");
+                const msg = (err.message === "Failed to fetch")
+                    ? "네트워크 연결 또는 대용량 파일 처리 중 오류가 발생했습니다. 페이지를 새로고침(Ctrl+F5) 후 다시 첨부해 주세요."
+                    : err.message;
+                showImportStatus(`❌ PDF 오류: ${msg}`, "error");
             } finally {
                 pdfFileInput.value = "";
             }
@@ -554,12 +646,26 @@ document.addEventListener("DOMContentLoaded", () => {
             `[${subjectName}] ${diffLabel} | ${questionCount}문항 (${timeMsg}) 다단계 계산 및 핵심 이론 모의고사를 구성 중입니다.`
         );
 
+        // 대용량 PDF 텍스트(5만 자 초과)의 경우 전 범위를 균등 샘플링하여 전송 용량 및 AI 응답 속도 최적화
+        let optimizedLectureNotes = lectureNotes;
+        const MAX_NOTES_CHARS = 50000;
+        if (optimizedLectureNotes.length > MAX_NOTES_CHARS) {
+            const chunks = optimizedLectureNotes.split(/(?=--- \[페이지 \d+\] ---)/);
+            if (chunks.length > 10) {
+                const step = Math.max(1, Math.ceil(chunks.length / 80));
+                const sampled = chunks.filter((_, idx) => idx % step === 0);
+                optimizedLectureNotes = sampled.join("\n").slice(0, MAX_NOTES_CHARS);
+            } else {
+                optimizedLectureNotes = optimizedLectureNotes.slice(0, MAX_NOTES_CHARS);
+            }
+        }
+
         try {
             const response = await fetch("/api/generate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    lecture_notes: lectureNotes,
+                    lecture_notes: optimizedLectureNotes,
                     practice_problems: practiceProblems,
                     subject_name: subjectName,
                     mode: selectedMode,

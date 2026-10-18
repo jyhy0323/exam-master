@@ -24,7 +24,15 @@ if not GEMINI_API_KEY:
 
 # 2. Flask 및 Gemini 클라이언트 초기화
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 최대 100MB 업로드 허용
 client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    return response
 
 def clean_json_response(raw_text: str) -> dict:
     """Gemini 응답에서 마크다운 코드 블록, 후행 쉼표, 이스케이프 오류 등을 복구하여 완벽한 JSON 딕셔너리로 안전하게 파싱"""

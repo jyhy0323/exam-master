@@ -13,6 +13,8 @@
     <title>AI 중간고사 족보 & 실전 모의시험 마스터 | Exam Master</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- 브라우저 직접 PDF 추출 엔진 (대용량 PDF 업로드 시 Failed to fetch / 4.5MB 제한 완벽 해결) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
     <!-- 상단 글로벌 네비게이션 -->
@@ -71,9 +73,9 @@
 
                         <!-- PDF 및 웹 링크 자동 추출 툴바 -->
                         <div class="quick-import-toolbar">
-                            <label class="btn-import-file" title="강의 PDF 파일에서 텍스트 자동 추출">
+                            <label class="btn-import-file" title="강의 PDF 파일에서 텍스트 자동 추출 (대용량·다중 선택 가능)">
                                 <span>📄 PDF 파일 첨부</span>
-                                <input type="file" id="pdfFileInput" accept=".pdf" class="hidden-file-input">
+                                <input type="file" id="pdfFileInput" accept=".pdf,application/pdf" multiple class="hidden-file-input">
                             </label>
                             <button type="button" id="toggleUrlBtn" class="btn-import-url" title="강의 웹페이지 링크에서 내용 가져오기">
                                 <span>🔗 웹 링크(URL) 가져오기</span>
