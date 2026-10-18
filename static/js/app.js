@@ -229,17 +229,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 4-0-1. 출제 무결성 & 사용자 맞춤 조건 칩 토글
-    const conditionChips = document.querySelectorAll("#conditionChipRow .preset-chip");
-    const customConditionInput = document.getElementById("customConditionInput");
-    if (conditionChips.length > 0) {
-        conditionChips.forEach(chip => {
-            chip.addEventListener("click", () => {
-                chip.classList.toggle("active");
-            });
-        });
-    }
-
     // 4-1. PDF 파일 자동 추출 핸들러 (브라우저 PDF.js 직접 추출 + 서버 폴백 이중 엔진)
     if (window.pdfjsLib) {
         window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
@@ -671,20 +660,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // 선택된 출제 무결성 칩 + 사용자 직접 입력 조건 합산
-        const activeCondList = [];
-        if (conditionChips.length > 0) {
-            conditionChips.forEach(chip => {
-                if (chip.classList.contains("active") && chip.dataset.cond) {
-                    activeCondList.push(chip.dataset.cond);
-                }
-            });
-        }
-        if (customConditionInput && customConditionInput.value.trim()) {
-            activeCondList.push(customConditionInput.value.trim());
-        }
-        const customConditions = activeCondList.join("\n- ");
-
         try {
             const response = await fetch("/api/generate", {
                 method: "POST",
@@ -697,8 +672,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     difficulty: difficulty,
                     question_count: questionCount,
                     time_limit_minutes: timeLimitMinutes,
-                    question_types: questionTypes,
-                    custom_conditions: customConditions
+                    question_types: questionTypes
                 })
             });
 

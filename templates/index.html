@@ -233,23 +233,6 @@
                             <span class="option-hint-text" id="timeHintText">직접 분 단위로 입력하거나 무제한 모드를 켤 수 있습니다</span>
                         </div>
                     </div>
-
-                    <!-- 출제 무결성 & 사용자 맞춤 조건 설정 -->
-                    <div class="custom-condition-box" style="margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08);">
-                        <label class="option-label" for="customConditionInput" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                            <span>🛡️ 출제 무결성 조건 & 추가 지시사항</span>
-                            <span class="custom-badge hot-badge">복수정답·논란 방지</span>
-                        </label>
-                        <div class="preset-chips-row" id="conditionChipRow" style="margin-bottom: 10px; flex-wrap: wrap;">
-                            <button type="button" class="preset-chip active" data-cond="복수정답 논란이 없도록 정답 외 나머지 선지는 예외(감가상각 등)가 없는 100% 명확한 참/거짓 명제로만 구성할 것">✔ 복수정답·애매한 선지 원천 차단</button>
-                            <button type="button" class="preset-chip active" data-cond="임의로 지어낸 애매한 문장 대신 제공된 교안·족보의 정확한 학술 용어(예: 취득원가 vs 장부가치, 미소멸원가 vs 소멸원가)만 사용할 것">✔ 교안·전공 용어 엄격 준수</button>
-                            <button type="button" class="preset-chip active" data-cond="해설에 정답인 이유뿐만 아니라 1~5번 각 선지가 왜 옳고 틀린지 선지별 분석을 모두 포함할 것">✔ 1~5번 모든 선지 정·오답 해설</button>
-                            <button type="button" class="preset-chip" data-cond="이론 문제와 다단계 계산 문제를 5:5 비율로 균형 있게 출제할 것">⚖️ 이론·계산 5:5 균형</button>
-                            <button type="button" class="preset-chip" data-cond="계산 문제 비중을 70% 이상으로 높여 집중 출제할 것">🔢 계산 문제 집중(70%+)</button>
-                        </div>
-                        <input type="text" id="customConditionInput" placeholder="추가로 걸고 싶은 출제 조건 입력 (예: '단정적 표현으로 복수정답 논란이 생기지 않게 단서조항을 명확히 달아줘', '3주차 종합원가계산 위주로 출제해줘')" style="width: 100%; padding: 11px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: rgba(15,23,42,0.6); color: #f8fafc; font-size: 0.92rem;">
-                        <span class="option-hint-text" style="display: block; margin-top: 6px;">위 조건 칩을 켜두거나 직접 조건을 입력하면 AI 출제위원이 해당 원칙을 최우선으로 준수하여 출제합니다.</span>
-                    </div>
                 </div>
 
                 <!-- 시험 생성 버튼 -->
