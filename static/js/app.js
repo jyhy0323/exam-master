@@ -692,8 +692,47 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // 동원랩 1~5주차 14문항 클라이언트 정답 무결성 검증 테이블
+    const DONGWONLAB_CLIENT_TRUTH = [
+        { q: "옳은 것은?", optKey: "비용은 특정 자원을 위해", ansIdx: 2, exp: "정답 3번 (해설: 3번 '원가대상은 원가를 계산하고 집계하는 단위이다.'가 옳은 설명입니다. 1번은 원가, 2번은 비용의 정의이며, 4번 재료원가·노무원가·제조경비의 합은 제조원가입니다.)" },
+        { q: "다음 중 틀린 것은?", optKey: "활동에 따라 제조원가와", ansIdx: 3, exp: "정답 4번 (해설: 4번이 틀린 문장입니다. 재무회계는 외부정보이용자 보고 목적이며, 관리회계가 내부 의사결정 목적입니다.)" },
+        { q: "의사결정에 영향을 미치는 원가가 아닌 것은", optKey: "기발생원가", ansIdx: 1, exp: "정답 2번 (해설: 2번 '기발생원가'(매몰원가)는 과거에 이미 발생한 원가로 미래 의사결정에 영향을 미치지 않는 비관련원가입니다.)" },
+        { q: "제조원가명세서에 관한 설명으로 틀린 것은", optKey: "기말재공품을 더하고 기초재공품을 차감", ansIdx: 2, exp: "정답 3번 (해설: 3번이 틀린 문장입니다. 당기총제조원가에 기초재공품을 더하고 기말재공품을 차감해야 당기제품제조원가가 됩니다.)" },
+        { q: "다음 중 틀린 것은?", optKey: "상장기업에는 공시 의무가 있다", ansIdx: 2, exp: "정답 3번 (해설: 3번이 틀린 문장입니다. K-IFRS에서 제조원가명세서는 의무 공시 재무제표가 아닙니다.)" },
+        { q: "개별원가계산에 관한 설명으로 옳지 않은 것은", optKey: "실제원가계산이나 정상원가계산과 함께", ansIdx: 3, exp: "정답 4번 (해설: 4번이 틀린 문장입니다. 개별원가계산은 원가의 집계 방법에 따른 분류이며, 원가의 측정 방법인 실제원가계산·정상원가계산과 결합하여 함께 적용할 수 있습니다.)" },
+        { q: "배부기준 선정기준에 대한 내용이다. 틀린 것은", optKey: "인과관계기준이 가장 타당하여", ansIdx: 0, exp: "정답 1번 (해설: 1번이 틀린 문장입니다. 인과관계기준을 가장 우선 적용하며, 인과관계를 찾기 어려울 때 보완적으로 적용하는 기준은 수혜기준·부담능력기준입니다.)" },
+        { q: "실제개별원가계산에 관한 설명으로 옳지 않은 것은", optKey: "1개월 단위로 계산하면", ansIdx: 2, exp: "정답 3번 (해설: 3번이 틀린 문장입니다. 실제배부율을 1개월 단위로 계산하면 계절적 요인과 조업도 변동으로 월별 배부율이 크게 변동하여 비교가 어렵습니다.)" },
+        { q: "정상원가계산에 관한 설명으로 옳지 않은 것은", optKey: "예상 배부기준량에 예정배부율을 곱하여", ansIdx: 2, exp: "정답 3번 (해설: 3번이 틀린 문장입니다! 정상원가계산에서 각 작업에 배부할 제조간접원가는 '예상 배부기준량'이 아니라 '실제 배부기준량'에 예정배부율을 곱하여 계산합니다. 4번 적시성 설명은 옳은 문장입니다.)" },
+        { q: "제조간접원가 배부차이에 관한 설명으로 옳은 것은", optKey: "과소배부가 발생한 경우", ansIdx: 2, exp: "정답 3번 (해설: 3번이 옳은 문장입니다! 과소배부(예정배부액 < 실제발생액)는 원가가 실제보다 과소계산된 상태이므로, 배부차이를 조정하면 재고자산과 매출원가가 상향조정(가산)됩니다. 2번 과대배부는 과대계산된 상태이므로 틀린 문장입니다.)" },
+        { q: "제조간접원가 배부차이의 조정 방법에 관한 설명으로 옳지 않은 것은", optKey: "조정되는 배부차이 총액이 달라짐", ansIdx: 3, exp: "정답 4번 (해설: 4번이 틀린 문장입니다. 어떤 조정 방법을 택하더라도 재공품·제품·매출원가 전체에서 조정되는 배부차이 총액은 항상 동일합니다.)" },
+        { q: "종합원가계산에 관한 설명으로 옳지 않은 것은", optKey: "직접재료가 공정 초기에 전량 투입", ansIdx: 2, exp: "정답 3번 (해설: 3번이 틀린 문장입니다. 직접재료가 공정 초기에 전량 투입되면 기말재공품의 직접재료원가 완성도는 100%가 되므로 가공원가 완성도와 다릅니다.)" },
+        { q: "가중평균법과 선입선출법에 관한 설명으로 옳은 것은", optKey: "기초재공품이 없는 경우", ansIdx: 1, exp: "정답 2번 (해설: 2번이 옳은 문장입니다. 기초재공품이 없는 경우에는 가중평균법과 선입선출법으로 계산한 완성품원가와 기말재공품원가가 서로 완전히 동일합니다.)" },
+        { q: "제조원가가 계속 상승하는 상황에서 가중평균법과 선입선출법을 비교한 설명으로 옳지 않은 것은", optKey: "매출총이익과 법인세는 선입선출법이", ansIdx: 3, exp: "정답 4번 (해설: 4번이 틀린 문장입니다. 원가 상승 시 선입선출법은 기말재공품원가가 크고 매출원가가 가중평균법보다 작으므로, 매출총이익과 법인세는 선입선출법이 가중평균법보다 큽니다.)" }
+    ];
+
+    function enforceDongwonlabAnswersClient(questions) {
+        if (!Array.isArray(questions)) return;
+        questions.forEach(q => {
+            if (!q.options || q.options.length < 4) return;
+            const qTitle = String(q.question || "").trim();
+            const optsJoined = q.options.join(" ");
+            for (const rule of DONGWONLAB_CLIENT_TRUTH) {
+                if (qTitle.includes(rule.q) && optsJoined.includes(rule.optKey)) {
+                    if (q.options[rule.ansIdx]) {
+                        q.correct_answer = q.options[rule.ansIdx];
+                        q.explanation = `[검증된 동원랩 족보 정석 해설] ${rule.exp}`;
+                    }
+                    break;
+                }
+            }
+        });
+    }
+
     // 7. 실전 시험 세션 시작
     function startExamSession(exam) {
+        if (exam && exam.questions) {
+            enforceDongwonlabAnswersClient(exam.questions);
+        }
         examSubjectPill.textContent = exam.subject || "중간고사";
         examTitleText.textContent = exam.exam_title || "실전 모의고사";
         
@@ -902,6 +941,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!currentExam || !currentExam.questions) return;
 
         const questions = currentExam.questions;
+        enforceDongwonlabAnswersClient(questions);
         const totalQuestions = questions.length;
         const pointPerQ = Math.round((100.0 / totalQuestions) * 10) / 10;
         let correctCount = 0;

@@ -615,17 +615,41 @@ def generate_exam():
 
         exam_data = clean_json_response(response.text)
 
-        # 후처리 검증: 해설(explanation)에서 최종 선언한 정답 번호와 correct_answer 불일치 시 자동 교정
+        # 1차 후처리 검증: 동원랩 1~5주차 14개 원본 퀴즈와 일치하는 문항은 파이썬 코드가 100% 확정된 보기·정답·해설로 강제 덮어쓰기 (AI 환각 및 이전 캐시 텍스트 영향 원천 차단)
         for q in exam_data.get("questions", []):
-            if q.get("type") == "multiple_choice" and q.get("options"):
+            q_title = str(q.get("question", "")).strip()
+            q_opts_joined = " ".join([str(o) for o in q.get("options", [])])
+            for dw in DONGWONLAB_FALLBACK_QUIZZES:
+                dw_q = dw["question"].strip()
+                # 질문 텍스트가 일치하거나 핵심 선택지 문구가 일치하는 경우 동원랩 원본으로 판정
+                is_match = (dw_q in q_title or q_title in dw_q)
+                if dw_q in ("옳은 것은?", "다음 중 틀린 것은?"):
+                    # 질문이 짧은 경우 첫 번째 보기 핵심 어구로 추가 확인
+                    first_opt_key = dw["options"][0][:12]
+                    is_match = is_match and (first_opt_key in q_opts_joined)
+
+                if is_match:
+                    ans_match = re.search(r"정답\s*([1-4])\s*번", dw["answer"])
+                    if ans_match:
+                        correct_num = int(ans_match.group(1))
+                        formatted_opts = [f"{i+1}. {opt}" for i, opt in enumerate(dw["options"])]
+                        q["options"] = formatted_opts
+                        q["correct_answer"] = formatted_opts[correct_num - 1]
+                        q["explanation"] = f"[검증된 동원랩 족보 정석 해설] {dw['answer']}"
+                        q["source_tag"] = f"동원랩 퀴즈 원본 ({dw['session']})"
+                        logging.info(f"🔒 [동원랩 정답 100% 고정] Q{q.get('id')} ({dw['session']}): 정답을 {correct_num}번('{q['correct_answer']}')으로 확정했습니다.")
+                    break
+
+        # 2차 후처리 검증: 일반 생성 문항에서 해설(explanation) 결론 번호와 correct_answer 불일치 시 자동 교정
+        for q in exam_data.get("questions", []):
+            if q.get("type") == "multiple_choice" and q.get("options") and not str(q.get("source_tag", "")).startswith("동원랩 퀴즈 원본"):
                 exp_text = str(q.get("explanation", ""))
                 cur_ans = str(q.get("correct_answer", "")).strip()
                 options = [str(o).strip() for o in q.get("options", [])]
 
-                # 해설 후반부에서 "정답은 N번", "최종 정답: N번", "정답: N번" 패턴 탐색
                 matches = re.findall(r"(?:최종\s*정답|따라서\s*정답|정답)\s*(?:은|은\s*바로|:|은\s*보기)?\s*([1-5])\s*번", exp_text)
                 if matches:
-                    declared_num = matches[-1]  # 가장 마지막에 선언된 최종 정답 번호
+                    declared_num = matches[-1]
                     if not cur_ans.startswith(f"{declared_num}."):
                         for opt in options:
                             if opt.startswith(f"{declared_num}."):
