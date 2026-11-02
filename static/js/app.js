@@ -49,12 +49,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const fetchUrlBtn = document.getElementById("fetchUrlBtn");
     const importStatusPill = document.getElementById("importStatusPill");
 
-    // 참여 웹(dongwonlab 등) 퀴즈 족보 퀵 임포트 요소
-    const togglePracticeUrlBtn = document.getElementById("togglePracticeUrlBtn");
-    const practiceUrlInputRow = document.getElementById("practiceUrlInputRow");
-    const practiceWebUrlInput = document.getElementById("practiceWebUrlInput");
-    const fetchPracticeUrlBtn = document.getElementById("fetchPracticeUrlBtn");
+    // 중급회계1 1~7주차 선택 프리셋 및 요약노트 토글 요소
+    const loadIaPresetBtn = document.getElementById("loadIaPresetBtn");
     const practiceImportStatusPill = document.getElementById("practiceImportStatusPill");
+    const toggleStudyGuideBtn = document.getElementById("toggleStudyGuideBtn");
+    const closeStudyGuideBtn = document.getElementById("closeStudyGuideBtn");
+    const studyGuidePanel = document.getElementById("studyGuidePanel");
 
     // 시험 화면 요소
     const examSubjectPill = document.getElementById("examSubjectPill");
@@ -392,24 +392,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     throw new Error(data.error || "웹페이지 추출 실패");
                 }
 
-                if (data.is_dongwonlab) {
-                    if (practiceProblemsInput.value.trim()) {
-                        practiceProblemsInput.value += `\n\n[웹 퀴즈 족보: ${data.title}]\n` + data.text;
-                    } else {
-                        practiceProblemsInput.value = `[웹 퀴즈 족보: ${data.title}]\n` + data.text;
-                    }
-                    if (data.subject && subjectNameInput) {
-                        subjectNameInput.value = data.subject;
-                    }
-                    showImportStatus(`🎉 동원랩 1~5주차 퀴즈 15문항 족보 추출 성공! 족보 창에 자동 등록되었습니다.`, "success");
+                if (lectureNotesInput.value.trim()) {
+                    lectureNotesInput.value += `\n\n[웹 링크 추출: ${data.title}]\n` + data.text;
                 } else {
-                    if (lectureNotesInput.value.trim()) {
-                        lectureNotesInput.value += `\n\n[웹 링크 추출: ${data.title}]\n` + data.text;
-                    } else {
-                        lectureNotesInput.value = `[웹 링크 추출: ${data.title}]\n` + data.text;
-                    }
-                    showImportStatus(`✅ 웹 링크 추출 완료! (${data.title})`, "success");
+                    lectureNotesInput.value = `[웹 링크 추출: ${data.title}]\n` + data.text;
                 }
+                showImportStatus(`✅ 웹 링크 추출 완료! (${data.title})`, "success");
                 urlInputRow.classList.add("hidden");
                 webUrlInput.value = "";
             } catch (err) {
@@ -421,16 +409,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 4-3. 참여 웹 퀴즈 족보 링크 추출 핸들러 (dongwonlab.com 1~5주차 선택 지원)
-    const dongwonWeekChips = document.querySelectorAll("#dongwonWeekChips .week-chip");
+    // 4-3. 중급회계1 (1~7주차 492페이지 압축) 주차별 선택 불러오기 핸들러
+    const iaWeekChips = document.querySelectorAll("#iaWeekChips .week-chip");
 
-    function getSelectedDongwonWeeks() {
-        const allChip = document.querySelector('#dongwonWeekChips .week-chip[data-week="all"]');
-        if (!dongwonWeekChips.length || (allChip && allChip.classList.contains("active"))) {
+    function getSelectedIaWeeks() {
+        const allChip = document.querySelector('#iaWeekChips .week-chip[data-week="all"]');
+        if (!iaWeekChips.length || (allChip && allChip.classList.contains("active"))) {
             return ["all"];
         }
         const selected = [];
-        dongwonWeekChips.forEach(chip => {
+        iaWeekChips.forEach(chip => {
             if (chip.dataset.week !== "all" && chip.classList.contains("active")) {
                 selected.push(chip.dataset.week);
             }
@@ -438,11 +426,11 @@ document.addEventListener("DOMContentLoaded", () => {
         return selected.length > 0 ? selected : ["all"];
     }
 
-    if (dongwonWeekChips.length > 0) {
-        const allChip = document.querySelector('#dongwonWeekChips .week-chip[data-week="all"]');
-        const indivChips = Array.from(dongwonWeekChips).filter(c => c.dataset.week !== "all");
+    if (iaWeekChips.length > 0) {
+        const allChip = document.querySelector('#iaWeekChips .week-chip[data-week="all"]');
+        const indivChips = Array.from(iaWeekChips).filter(c => c.dataset.week !== "all");
 
-        dongwonWeekChips.forEach(chip => {
+        iaWeekChips.forEach(chip => {
             chip.addEventListener("click", () => {
                 if (chip.dataset.week === "all") {
                     indivChips.forEach(c => c.classList.remove("active"));
@@ -461,68 +449,72 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    if (togglePracticeUrlBtn && practiceUrlInputRow) {
-        togglePracticeUrlBtn.addEventListener("click", () => {
-            practiceUrlInputRow.classList.toggle("hidden");
-            if (!practiceUrlInputRow.classList.contains("hidden")) {
-                if (!practiceWebUrlInput.value.trim()) {
-                    practiceWebUrlInput.value = "http://dongwonlab.com";
-                }
+    async function loadIntermediateAccountingPreset(weeksToLoad) {
+        if (loadIaPresetBtn) {
+            loadIaPresetBtn.disabled = true;
+            loadIaPresetBtn.textContent = "⏳ 선택 주차 자료 불러오는 중...";
+        }
+        showPracticeImportStatus("📚 중급회계1 선택 주차 핵심 요약 & 예상족보 세팅 중...", "loading");
+
+        try {
+            const resp = await fetch("/api/load-preset", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    weeks: weeksToLoad || getSelectedIaWeeks()
+                })
+            });
+            const data = await resp.json();
+
+            if (!resp.ok || !data.success) {
+                throw new Error(data.error || "프리셋 로드 실패");
+            }
+
+            lectureNotesInput.value = data.lecture_notes;
+            practiceProblemsInput.value = data.practice_problems;
+
+            if (data.subject && subjectNameInput) {
+                subjectNameInput.value = data.subject;
+            }
+
+            // 객관식 기본 선택
+            if (questionTypesSelect) {
+                questionTypesSelect.value = "multiple_choice";
+            }
+
+            showPracticeImportStatus(
+                `🎉 [${data.week_label}] 강의 핵심요약 + 적중 예상족보(${data.quiz_count}문항) 세팅 완료! 하단 'AI 실전 모의고사 생성' 버튼을 누르세요.`,
+                "success"
+            );
+        } catch (err) {
+            showPracticeImportStatus(`❌ 불러오기 오류: ${err.message}`, "error");
+        } finally {
+            if (loadIaPresetBtn) {
+                loadIaPresetBtn.disabled = false;
+                loadIaPresetBtn.textContent = "📥 선택 주차 강의요약 + 적중 예상족보 불러오기";
+            }
+        }
+    }
+
+    if (loadIaPresetBtn) {
+        loadIaPresetBtn.addEventListener("click", () => {
+            loadIntermediateAccountingPreset(getSelectedIaWeeks());
+        });
+    }
+
+    // 내장 초압축 요약노트 & 말바꾸기 함정표 토글
+    if (toggleStudyGuideBtn && studyGuidePanel) {
+        toggleStudyGuideBtn.addEventListener("click", () => {
+            studyGuidePanel.classList.toggle("hidden");
+            if (!studyGuidePanel.classList.contains("hidden")) {
+                studyGuidePanel.scrollIntoView({ behavior: "smooth", block: "start" });
             }
         });
     }
 
-    if (fetchPracticeUrlBtn && practiceWebUrlInput) {
-        fetchPracticeUrlBtn.addEventListener("click", async () => {
-            const url = practiceWebUrlInput.value.trim() || "http://dongwonlab.com";
-            const selectedWeeks = getSelectedDongwonWeeks();
-
-            fetchPracticeUrlBtn.disabled = true;
-            fetchPracticeUrlBtn.textContent = "추출 중...";
-            showPracticeImportStatus("🔗 동원랩 퀴즈 족보 데이터 불러오는 중...", "loading");
-
-            try {
-                const resp = await fetch("/api/extract-url", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        url: url,
-                        weeks: selectedWeeks
-                    })
-                });
-                const data = await resp.json();
-
-                if (!resp.ok || !data.success) {
-                    throw new Error(data.error || "퀴즈 족보 추출 실패");
-                }
-
-                // 기존에 추출된 동원랩 족보가 있으면 선택한 주차 내용으로 깔끔하게 교체
-                const currentText = practiceProblemsInput.value.trim();
-                if (!currentText || currentText.startsWith("[추출 족보:") || currentText.startsWith("[웹 퀴즈 족보:")) {
-                    practiceProblemsInput.value = `[추출 족보: ${data.title}]\n` + data.text;
-                } else {
-                    practiceProblemsInput.value = currentText + `\n\n[추출 족보: ${data.title}]\n` + data.text;
-                }
-
-                if (data.subject && subjectNameInput) {
-                    subjectNameInput.value = data.subject;
-                }
-
-                // 족보 적중 모드 자동 선택
-                const hitFocusRadio = document.querySelector('input[name="mode"][value="hit_focus"]');
-                if (hitFocusRadio) {
-                    hitFocusRadio.checked = true;
-                    document.querySelectorAll(".radio-card").forEach(c => c.classList.remove("active"));
-                    hitFocusRadio.closest(".radio-card").classList.add("active");
-                }
-
-                showPracticeImportStatus(`🎉 ${data.title} 추출 완료! 다른 주차를 선택해 다시 누르면 해당 주차로 변경됩니다.`, "success");
-            } catch (err) {
-                showPracticeImportStatus(`❌ 족보 추출 오류: ${err.message}`, "error");
-            } finally {
-                fetchPracticeUrlBtn.disabled = false;
-                fetchPracticeUrlBtn.textContent = "선택 주차 족보 추출";
-            }
+    if (closeStudyGuideBtn && studyGuidePanel) {
+        closeStudyGuideBtn.addEventListener("click", () => {
+            studyGuidePanel.classList.add("hidden");
         });
     }
 
@@ -534,7 +526,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (type === "success") {
             setTimeout(() => {
                 practiceImportStatusPill.classList.add("hidden");
-            }, 6000);
+            }, 8000);
         }
     }
 
@@ -550,63 +542,28 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 5. [체험용 샘플 데이터 자동 채우기] 버튼
-    loadSampleBtn.addEventListener("click", () => {
-        subjectNameInput.value = "컴퓨터 구조 및 운영체제 (중간고사)";
-        
-        lectureNotesInput.value = `[1장: 컴퓨터 시스템의 구조]
-- 컴퓨터의 기본 하드웨어는 CPU(중앙처리장치), 주기억장치(RAM/ROM), 보조기억장치(SSD/HDD), 입출력장치로 구성된다.
-- 폰 노이만 구조의 특징: 프로그램 내장 방식(Stored-program concept)으로 명령어와 데이터가 동일한 메모리에 적재되어 순차적으로 실행된다.
-- CPU의 3대 핵심 구성요소:
-  1) ALU(산술논리연산장치): 덧셈, 뺄셈, AND, OR 등 연산 수행
-  2) 제어장치(Control Unit): 명령어를 해독하고 시스템 각 장치에 제어 신호를 보냄
-  3) 레지스터(Register): CPU 내부의 초고속 임시 기억장치 (PC, IR, MAR, MBR 등)
+    // 5. [중급회계1 전범위 1초 만에 불러오기] 상단 버튼
+    if (loadSampleBtn) {
+        loadSampleBtn.addEventListener("click", async () => {
+            // 칩을 '전체 (1~7주차)'로 활성화
+            if (iaWeekChips.length > 0) {
+                iaWeekChips.forEach(c => {
+                    if (c.dataset.week === "all") c.classList.add("active");
+                    else c.classList.remove("active");
+                });
+            }
+            await loadIntermediateAccountingPreset(["all"]);
 
-[2장: 메모리 계층 구조 및 캐시 메모리]
-- 속도: 레지스터 > L1/L2/L3 캐시 > 주기억장치(RAM) > 보조기억장치(SSD/HDD)
-- 지역성의 원리(Locality):
-  1) 시간 지역성(Temporal Locality): 최근에 참조된 데이터는 가까운 미래에 다시 참조될 가능성이 높음 (반복문 등)
-  2) 공간 지역성(Spatial Locality): 특정 메모리가 참조되면 인접한 메모리 위치도 곧 참조될 가능성이 높음 (배열 등)
-- 캐시 사상(Mapping) 방식: 직접 사상(Direct), 연관 사상(Associative), 세트 연관 사상(Set-Associative)`;
-
-        practiceProblemsInput.value = `[학생참여 웹 연습문제 1]
-문제: CPU 내부에서 다음번에 인출(Fetch)하여 실행할 명령어의 주소를 보관하는 레지스터의 명칭은 무엇인가?
-정답: 프로그램 카운터 (PC, Program Counter)
-해설: PC는 순차적으로 실행될 명령어의 주소를 가리킵니다.
-
-[학생참여 웹 연습문제 2]
-문제: 다음 중 전원이 꺼져도 데이터가 보존되는 비휘발성 메모리로 옳은 것은?
-1. SRAM
-2. DRAM
-3. ROM
-4. 레지스터
-정답: 3. ROM
-해설: ROM과 플래시 메모리는 비휘발성이며, SRAM과 DRAM은 전원이 차단되면 데이터가 소멸되는 휘발성 메모리입니다.
-
-[학생참여 웹 연습문제 3]
-문제: 캐시 메모리의 사상(Mapping) 방식 중 태그 충돌(Conflict Miss)이 가장 적게 발생하지만 하드웨어 구조가 가장 복잡한 방식은 무엇인가?
-정답: 완전 연관 사상 (Fully Associative Mapping)
-해설: 완전 연관 사상은 어느 캐시 블록에나 자유롭게 배치될 수 있어 충돌이 가장 적습니다.`;
-
-        // 문항 수 및 시간 기본값 리셋
-        if (customQuestionCountInput) customQuestionCountInput.value = 10;
-        if (customTimeLimitInput) customTimeLimitInput.value = 20;
-        if (unlimitedTimeToggle) {
-            unlimitedTimeToggle.checked = false;
-            syncUnlimitedState();
-        }
-        updateCountChipActive(10);
-
-        // 피드백 애니메이션
-        loadSampleBtn.style.background = "rgba(16, 185, 129, 0.25)";
-        loadSampleBtn.style.color = "#34d399";
-        loadSampleBtn.innerHTML = "<span>✅ 1~2강 핵심 요약 및 족보 연습문제 입력 완료!</span>";
-        setTimeout(() => {
-            loadSampleBtn.style.background = "";
-            loadSampleBtn.style.color = "";
-            loadSampleBtn.innerHTML = "<span>💡 예제 자료로 1초 만에 체험해보기</span>";
-        }, 2500);
-    });
+            loadSampleBtn.style.background = "rgba(16, 185, 129, 0.25)";
+            loadSampleBtn.style.color = "#34d399";
+            loadSampleBtn.innerHTML = "<span>✅ 중급회계1 (1~7주차 492p) 요약 & 족보 세팅 완료!</span>";
+            setTimeout(() => {
+                loadSampleBtn.style.background = "";
+                loadSampleBtn.style.color = "";
+                loadSampleBtn.innerHTML = "<span>⚡ 중급회계1 (1~7주차 전범위) 1초 만에 불러오기</span>";
+            }, 2500);
+        });
+    }
 
     // 6. 시험 생성 폼 제출 핸들러
     setupForm.addEventListener("submit", async (e) => {
@@ -614,7 +571,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const lectureNotes = lectureNotesInput.value.trim();
         const practiceProblems = practiceProblemsInput.value.trim();
-        const subjectName = subjectNameInput.value.trim() || "중간고사 모의평가";
+        const subjectName = subjectNameInput.value.trim() || "중급회계1 중간고사 모의평가";
         const selectedMode = document.querySelector('input[name="mode"]:checked').value;
         const questionTypes = questionTypesSelect.value;
         const difficulty = examDifficultySelect ? examDifficultySelect.value : "hard";
@@ -635,15 +592,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (!lectureNotes && !practiceProblems) {
-            alert("강의 자료 요약이나 학생참여 웹 연습문제를 하나 이상 입력해 주세요!");
+            alert("상단 [선택 주차 강의요약 + 적중 예상족보 불러오기] 버튼을 누르거나 강의 자료를 입력해 주세요!");
             return;
         }
 
-        const diffLabel = (difficulty === "hard") ? "🔥실전 대학시험(킬러 계산)" : (difficulty === "standard" ? "📚표준 중간고사" : "🌱기본 점검");
+        const diffLabel = (difficulty === "hard") ? "🔥실전 중간고사(말바꾸기 함정+계산)" : (difficulty === "standard" ? "📚표준 중간고사" : "🌱기본 점검");
         const timeMsg = (timeLimitMinutes === 0) ? "무제한 연습 모드" : `${timeLimitMinutes}분 제한`;
         showLoading(
-            "AI 수석 출제위원이 고난도 실전 시험 문제를 출제하고 있습니다...",
-            `[${subjectName}] ${diffLabel} | ${questionCount}문항 (${timeMsg}) 다단계 계산 및 핵심 이론 모의고사를 구성 중입니다.`
+            "AI 수석 출제위원이 중급회계1 실전 시험 문제를 출제하고 있습니다...",
+            `[${subjectName}] ${diffLabel} | ${questionCount}문항 (${timeMsg}) K-IFRS 기준서 말바꾸기 및 사례 모의고사를 구성 중입니다.`
         );
 
         // 대용량 PDF 텍스트(5만 자 초과)의 경우 전 범위를 균등 샘플링하여 전송 용량 및 AI 응답 속도 최적화
@@ -692,47 +649,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 동원랩 1~5주차 14문항 클라이언트 정답 무결성 검증 테이블
-    const DONGWONLAB_CLIENT_TRUTH = [
-        { q: "옳은 것은?", optKey: "비용은 특정 자원을 위해", ansIdx: 2, exp: "정답 3번 (해설: 3번 '원가대상은 원가를 계산하고 집계하는 단위이다.'가 옳은 설명입니다. 1번은 원가, 2번은 비용의 정의이며, 4번 재료원가·노무원가·제조경비의 합은 제조원가입니다.)" },
-        { q: "다음 중 틀린 것은?", optKey: "활동에 따라 제조원가와", ansIdx: 3, exp: "정답 4번 (해설: 4번이 틀린 문장입니다. 재무회계는 외부정보이용자 보고 목적이며, 관리회계가 내부 의사결정 목적입니다.)" },
-        { q: "의사결정에 영향을 미치는 원가가 아닌 것은", optKey: "기발생원가", ansIdx: 1, exp: "정답 2번 (해설: 2번 '기발생원가'(매몰원가)는 과거에 이미 발생한 원가로 미래 의사결정에 영향을 미치지 않는 비관련원가입니다.)" },
-        { q: "제조원가명세서에 관한 설명으로 틀린 것은", optKey: "기말재공품을 더하고 기초재공품을 차감", ansIdx: 2, exp: "정답 3번 (해설: 3번이 틀린 문장입니다. 당기총제조원가에 기초재공품을 더하고 기말재공품을 차감해야 당기제품제조원가가 됩니다.)" },
-        { q: "다음 중 틀린 것은?", optKey: "상장기업에는 공시 의무가 있다", ansIdx: 2, exp: "정답 3번 (해설: 3번이 틀린 문장입니다. K-IFRS에서 제조원가명세서는 의무 공시 재무제표가 아닙니다.)" },
-        { q: "개별원가계산에 관한 설명으로 옳지 않은 것은", optKey: "실제원가계산이나 정상원가계산과 함께", ansIdx: 3, exp: "정답 4번 (해설: 4번이 틀린 문장입니다. 개별원가계산은 원가의 집계 방법에 따른 분류이며, 원가의 측정 방법인 실제원가계산·정상원가계산과 결합하여 함께 적용할 수 있습니다.)" },
-        { q: "배부기준 선정기준에 대한 내용이다. 틀린 것은", optKey: "인과관계기준이 가장 타당하여", ansIdx: 0, exp: "정답 1번 (해설: 1번이 틀린 문장입니다. 인과관계기준을 가장 우선 적용하며, 인과관계를 찾기 어려울 때 보완적으로 적용하는 기준은 수혜기준·부담능력기준입니다.)" },
-        { q: "실제개별원가계산에 관한 설명으로 옳지 않은 것은", optKey: "1개월 단위로 계산하면", ansIdx: 2, exp: "정답 3번 (해설: 3번이 틀린 문장입니다. 실제배부율을 1개월 단위로 계산하면 계절적 요인과 조업도 변동으로 월별 배부율이 크게 변동하여 비교가 어렵습니다.)" },
-        { q: "정상원가계산에 관한 설명으로 옳지 않은 것은", optKey: "예상 배부기준량에 예정배부율을 곱하여", ansIdx: 2, exp: "정답 3번 (해설: 3번이 틀린 문장입니다! 정상원가계산에서 각 작업에 배부할 제조간접원가는 '예상 배부기준량'이 아니라 '실제 배부기준량'에 예정배부율을 곱하여 계산합니다. 4번 적시성 설명은 옳은 문장입니다.)" },
-        { q: "제조간접원가 배부차이에 관한 설명으로 옳은 것은", optKey: "과소배부가 발생한 경우", ansIdx: 2, exp: "정답 3번 (해설: 3번이 옳은 문장입니다! 과소배부(예정배부액 < 실제발생액)는 원가가 실제보다 과소계산된 상태이므로, 배부차이를 조정하면 재고자산과 매출원가가 상향조정(가산)됩니다. 2번 과대배부는 과대계산된 상태이므로 틀린 문장입니다.)" },
-        { q: "제조간접원가 배부차이의 조정 방법에 관한 설명으로 옳지 않은 것은", optKey: "조정되는 배부차이 총액이 달라짐", ansIdx: 3, exp: "정답 4번 (해설: 4번이 틀린 문장입니다. 어떤 조정 방법을 택하더라도 재공품·제품·매출원가 전체에서 조정되는 배부차이 총액은 항상 동일합니다.)" },
-        { q: "종합원가계산에 관한 설명으로 옳지 않은 것은", optKey: "직접재료가 공정 초기에 전량 투입", ansIdx: 2, exp: "정답 3번 (해설: 3번이 틀린 문장입니다. 직접재료가 공정 초기에 전량 투입되면 기말재공품의 직접재료원가 완성도는 100%가 되므로 가공원가 완성도와 다릅니다.)" },
-        { q: "가중평균법과 선입선출법에 관한 설명으로 옳은 것은", optKey: "기초재공품이 없는 경우", ansIdx: 1, exp: "정답 2번 (해설: 2번이 옳은 문장입니다. 기초재공품이 없는 경우에는 가중평균법과 선입선출법으로 계산한 완성품원가와 기말재공품원가가 서로 완전히 동일합니다.)" },
-        { q: "제조원가가 계속 상승하는 상황에서 가중평균법과 선입선출법을 비교한 설명으로 옳지 않은 것은", optKey: "매출총이익과 법인세는 선입선출법이", ansIdx: 3, exp: "정답 4번 (해설: 4번이 틀린 문장입니다. 원가 상승 시 선입선출법은 기말재공품원가가 크고 매출원가가 가중평균법보다 작으므로, 매출총이익과 법인세는 선입선출법이 가중평균법보다 큽니다.)" }
-    ];
-
-    function enforceDongwonlabAnswersClient(questions) {
-        if (!Array.isArray(questions)) return;
-        questions.forEach(q => {
-            if (!q.options || q.options.length < 4) return;
-            const qTitle = String(q.question || "").trim();
-            const optsJoined = q.options.join(" ");
-            for (const rule of DONGWONLAB_CLIENT_TRUTH) {
-                if (qTitle.includes(rule.q) && optsJoined.includes(rule.optKey)) {
-                    if (q.options[rule.ansIdx]) {
-                        q.correct_answer = q.options[rule.ansIdx];
-                        q.explanation = `[검증된 동원랩 족보 정석 해설] ${rule.exp}`;
-                    }
-                    break;
-                }
-            }
-        });
-    }
-
     // 7. 실전 시험 세션 시작
     function startExamSession(exam) {
-        if (exam && exam.questions) {
-            enforceDongwonlabAnswersClient(exam.questions);
-        }
         examSubjectPill.textContent = exam.subject || "중간고사";
         examTitleText.textContent = exam.exam_title || "실전 모의고사";
         

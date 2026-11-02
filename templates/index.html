@@ -39,14 +39,79 @@
              ================================================================= -->
         <section id="setupView" class="view-section active">
             <div class="setup-hero">
-                <span class="hero-badge">🎯 시험 적중률 100% 도전</span>
-                <h1 class="hero-title">교수님 강의 자료와 참여 웹 연습문제로<br><span class="gradient-text">진짜 시험에 나올 문제</span>를 만듭니다</h1>
-                <p class="hero-desc">교수님 수업 PPT 요약본과 학생참여 웹 퀴즈를 넣으면, Gemini AI가 실제 시험 유형(4~5지선다 객관식 + 주관식 단답형)으로 즉시 출제해 드립니다.</p>
+                <span class="hero-badge">🎯 중급회계1 (1~7주차 492p) 완벽 대비</span>
+                <h1 class="hero-title">방대한 500페이지 이론 PPT도<br><span class="gradient-text">초압축 요약 & 말문제 함정 족보</span>로 끝냅니다</h1>
+                <p class="hero-desc">1~7주차 중 원하는 주차를 선택해 원클릭으로 불러오면, K-IFRS 기준서 말바꾸기(O/X) 함정과 필수 계산 예제로 실전 모의고사를 즉시 생성합니다.</p>
                 
                 <div class="hero-action-row">
                     <button type="button" id="loadSampleBtn" class="btn-sample">
-                        <span>💡 예제 자료로 1초 만에 체험해보기</span>
+                        <span>⚡ 중급회계1 (1~7주차 전범위) 1초 만에 불러오기</span>
                     </button>
+                    <button type="button" id="toggleStudyGuideBtn" class="btn-sample btn-guide-toggle">
+                        <span>📖 1~7주차 초압축 요약 & 말바꾸기 O/X 함정표 보기</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 모바일/웹 내장 초압축 요약노트 & 말문제 함정 O/X 리더기 (토글) -->
+            <div id="studyGuidePanel" class="study-guide-panel hidden">
+                <div class="study-guide-header">
+                    <div>
+                        <h3>🔥 중급회계1 (1~7주차 492p ➔ 15분 컷) 핵심 요약 & 말문제 O/X 함정 족보</h3>
+                        <p>권성수 교수님(회계기준원 출신) 중간고사 대비: 최신 K-IFRS 제1118호·제1008호 완벽 반영</p>
+                    </div>
+                    <button type="button" id="closeStudyGuideBtn" class="btn-close-guide">✕ 닫기</button>
+                </div>
+                <div class="study-guide-body">
+                    <div class="guide-section">
+                        <h4>🚨 시험 직전 3분 컷: 무조건 나오는 '기준서 말바꾸기 오답 함정' TOP 12</h4>
+                        <div class="trap-list">
+                            <div class="trap-item"><span class="trap-bad">❌ 오답함정:</span> 주기적 감사인 지정제는 6년 자유선임 후 <strong>2년간</strong> 지정감사인을 선임한다.<br><span class="trap-good">⭕ 정석근거:</span> 상장사 등이 <strong>6년 자유선임 후 3년간</strong> 증선위 지정감사인을 선임하는 <strong>6+3 제도</strong>임 (2주차)</div>
+                            <div class="trap-item"><span class="trap-bad">❌ 오답함정:</span> 경영자가 회계이익을 조작하거나 태만하는 것은 사전적 정보비대칭인 <strong>역선택</strong>의 사례이다.<br><span class="trap-good">⭕ 정석근거:</span> 계약 후 경영자 행동을 관찰할 수 없어 발생하는 문제는 <strong>도덕적 해이</strong>임 (내부자 주식거래·중고차 시장이 역선택) (2주차)</div>
+                            <div class="trap-item"><span class="trap-bad">❌ 오답함정:</span> 개념체계는 K-IFRS 기준서의 일부이므로 개별 기준서보다 <strong>우선 적용</strong>되며, 일반목적재무보고서는 <strong>기업가치를 직접 보여준다</strong>.<br><span class="trap-good">⭕ 정석근거:</span> 개념체계는 회계기준이 아니며 상충 시 <strong>개별 기준서가 우선</strong>함. 또한 기업가치를 <strong>직접 보여주지 않고 추정하도록</strong> 도움 (3주차)</div>
+                            <div class="trap-item"><span class="trap-bad">❌ 오답함정:</span> 신중성(prudence)은 수익보다 비용을 빨리 인식하는 <strong>비대칭성을 필연적으로 내포</strong>하며, 오류가 없는 서술은 <strong>완벽한 정확성</strong>을 의미한다.<br><span class="trap-good">⭕ 정석근거:</span> 신중성은 중립성을 뒷받침하며 <strong>비대칭성을 필연적으로 내포하지 않음</strong>. 오류가 없는 서술도 <strong>완벽한 정확성을 뜻하지 않음</strong> (3주차)</div>
+                            <div class="trap-item"><span class="trap-bad">❌ 오답함정:</span> 청소용역처럼 즉시 소비되는 용역은 <strong>자산 정의를 충족할 수 없으며</strong>, 회사가 보유한 <strong>자기주식·자기사채는 자산</strong>이다.<br><span class="trap-good">⭕ 정석근거:</span> 즉시 소비되는 용역도 <strong>소비 직전 순간에는 자산 정의를 충족</strong>함. <strong>자기주식·자기사채는 절대 자산이 아님!</strong> (3주차)</div>
+                            <div class="trap-item"><span class="trap-bad">❌ 오답함정:</span> 자산을 <strong>공정가치</strong>로 측정할 때 취득 시 <strong>거래원가를 가산</strong>하고 처분 시 <strong>거래원가를 차감</strong>한다.<br><span class="trap-good">⭕ 정석근거:</span> 공정가치는 시장참여자 관점 유출가치이므로 <strong>취득 거래원가 불포함, 처분 거래원가도 미차감!</strong> (역사적원가·현행원가가 취득 거래원가 포함) (4주차)</div>
+                            <div class="trap-item"><span class="trap-bad">❌ 오답함정:</span> <strong>실물적 자본유지개념</strong>은 역사적원가를 적용하며 보유자산 가격상승분을 <strong>당기이익</strong>으로 인식한다.<br><span class="trap-good">⭕ 정석근거:</span> 실물적 자본유지는 <strong>현행원가</strong>를 적용하며, 보유자산 가격변동분은 이익이 아니라 <strong>자본유지조정(자본)</strong>으로 처리함! (5주차)</div>
+                            <div class="trap-item"><span class="trap-bad">❌ 오답함정:</span> 기타포괄손익-공정가치(FVOCI) <strong>선택 지분상품(주식)</strong>의 평가손익과 재평가잉여금은 처분 시 <strong>당기손익으로 재분류조정</strong>한다.<br><span class="trap-good">⭕ 정석근거:</span> FVOCI <strong>지분상품</strong>과 재평가잉여금은 처분 시에도 <strong>당기손익 재분류조정 절대 불가!</strong> (FVOCI 채무상품만 재분류 가능) (5주차)</div>
+                            <div class="trap-item"><span class="trap-bad">❌ 오답함정:</span> 제1118호에서 일반 제조기업의 <strong>현금및현금성자산 이자수익은 재무 범주</strong>로 분류하며, 재고자산평가충당금 차감 표시는 <strong>상계</strong>에 해당한다.<br><span class="trap-good">⭕ 정석근거:</span> 현금및현금성자산 이자수익은 <strong>투자 범주</strong>임! 평가충당금·대손충당금 차감 순액 표시는 <strong>상계가 아님!</strong> (6주차)</div>
+                            <div class="trap-item"><span class="trap-bad">❌ 오답함정:</span> 정상영업주기(예: 18개월) 내 실현되는 매출채권·재고자산이라도 12개월이 지나 실현되면 <strong>비유동자산</strong>으로 분류한다.<br><span class="trap-good">⭕ 정석근거:</span> 매출채권·재고자산·매입채무는 12개월 초과 시에도 <strong>정상영업주기 내 실현(결제)되면 무조건 유동자산(유동부채)!</strong> 이연법인세는 항상 <strong>비유동</strong>! (7주차)</div>
+                            <div class="trap-item"><span class="trap-bad">❌ 오답함정:</span> 보고기간 후 ~ 발행승인일 전에 단기차입금의 <strong>장기차환 약정</strong>을 체결하면 보고기간말 현재 <strong>비유동부채</strong>로 분류한다.<br><span class="trap-good">⭕ 정석근거:</span> 보고기간말(12/31) 현재 연기 권리가 없었으므로 <strong>유동부채</strong>로 분류! (수정을 요하지 않는 보고기간후사건 주석 공시) (7주차)</div>
+                            <div class="trap-item"><span class="trap-bad">❌ 오답함정:</span> 제1118호 문단 118의 <strong>매출총손익과 상각전영업이익(OPBDA)</strong>은 <strong>경영진이 정의한 성과측정치(MPM)</strong>이며, 유형자산 <strong>시운전 시제품 순매각액은 취득원가에서 차감</strong>한다.<br><span class="trap-good">⭕ 정석근거:</span> 매출총손익·OPBDA·영업손익은 공식 중간합계이므로 <strong>MPM이 아님!</strong> 시운전 시제품 판매수익과 원가는 취득원가 차감 없이 <strong>당기손익 별도 인식!</strong> (7주차)</div>
+                        </div>
+                    </div>
+                    <div class="guide-section">
+                        <h4>🔢 시험에 나오는 계산 예제 3선 (교안 숫자 그대로 암기!)</h4>
+                        <div class="formula-grid">
+                            <div class="formula-box">
+                                <strong>① 자본유지개념 이익 (5주차1 19p)</strong>
+                                <p>기초 1,000만(100개@10만) ➔ 판매 1,500만(@15만), 기말 현행원가 @12만(1,200만), 물가 10% 상승</p>
+                                <ul>
+                                    <li>명목화폐 이익 = 1,500만 - 1,000만 = <strong>500만원</strong></li>
+                                    <li>불변구매력 이익 = 1,500만 - 1,100만 = <strong>400만원</strong></li>
+                                    <li>실물적 자본유지 이익 = 1,500만 - 1,200만 = <strong>300만원</strong> (200만원은 자본유지조정)</li>
+                                </ul>
+                            </div>
+                            <div class="formula-box">
+                                <strong>② 평균영업주기 계산 (7주차 12p)</strong>
+                                <p>평균재고 50,000원 / 매출원가 300,000원, 평균매출채권 80,000원 / 매출액 480,000원 (360일 기준)</p>
+                                <ul>
+                                    <li>재고보유기간 = 360 × (50,000/300,000) = <strong>60일</strong></li>
+                                    <li>매출채권회수기간 = 360 × (80,000/480,000) = <strong>60일</strong></li>
+                                    <li>평균영업주기 = 60일 + 60일 = <strong>120일 (4개월)</strong></li>
+                                </ul>
+                            </div>
+                            <div class="formula-box">
+                                <strong>③ 복구충당부채 취득원가 (7주차 68p)</strong>
+                                <p>구입가 1,000,000원, 3년 뒤 복구원가 100,000원(10% 현가계수 0.75131, 정액법)</p>
+                                <ul>
+                                    <li>복구충당부채(현재가치) = <strong>75,131원</strong></li>
+                                    <li>설비 취득원가 = <strong>1,075,131원</strong></li>
+                                    <li>1차연도 감가상각비 <strong>358,377원</strong> + 이자비용 <strong>7,513원</strong> = 총 비용 <strong>365,890원</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -55,19 +120,45 @@
                 <div class="form-row">
                     <div class="form-group flex-1">
                         <label for="subjectName">📚 과목명 / 시험 범위</label>
-                        <input type="text" id="subjectName" placeholder="예: 컴퓨터 개론 및 프로그래밍 (1~6주차)" value="컴퓨터 개론 및 프로그래밍 (중간고사)">
+                        <input type="text" id="subjectName" placeholder="예: 중급회계1 (1~7주차 중간고사 대비)" value="중급회계1 (1~7주차 중간고사 대비)">
                     </div>
                 </div>
 
-                <!-- 2단 텍스트 입력창: 강의 자료 vs 참여 웹 연습문제 -->
+                <!-- ★ 중급회계1 1~7주차 원클릭 선택 패널 ★ -->
+                <div class="preset-selector-card">
+                    <div class="preset-selector-header">
+                        <div>
+                            <h4>⚡ 중급회계1 (권성수 교수님 1~7주차 492p) 주차별 요약 & 예상족보 선택</h4>
+                            <p>공부할 주차를 선택하고 버튼을 누르면 <strong>강의 핵심 요약</strong>과 <strong>말바꾸기 함정 예상문제</strong>가 동시에 세팅됩니다.</p>
+                        </div>
+                    </div>
+                    <div id="iaWeekChips" class="week-chip-group">
+                        <button type="button" class="week-chip active" data-week="all">전체 (1~7주차 전범위)</button>
+                        <button type="button" class="week-chip" data-week="1주차">1주차 (회계저울·자산분류)</button>
+                        <button type="button" class="week-chip" data-week="2주차">2주차 (외감법·역선택·IFRS)</button>
+                        <button type="button" class="week-chip" data-week="3주차">3주차 (개념체계·질적특성·자산)</button>
+                        <button type="button" class="week-chip" data-week="4주차">4주차 (부채·미이행계약·측정기준)</button>
+                        <button type="button" class="week-chip" data-week="5주차">5주차 (자본유지·현재가치·제1008호)</button>
+                        <button type="button" class="week-chip" data-week="6주차">6주차 (제1118호 손익5범주·상계)</button>
+                        <button type="button" class="week-chip" data-week="7주차">7주차 (유동분류·MPM·유형자산)</button>
+                    </div>
+                    <div class="preset-action-row">
+                        <button type="button" id="loadIaPresetBtn" class="btn-fetch-url btn-load-preset">
+                            📥 선택 주차 강의요약 + 적중 예상족보 불러오기
+                        </button>
+                    </div>
+                    <div id="practiceImportStatusPill" class="import-status-pill hidden"></div>
+                </div>
+
+                <!-- 2단 텍스트 입력창: 강의 자료 vs 핵심 예상 족보 -->
                 <div class="input-grid">
                     <!-- 입력 1: 강의 자료 및 예제 -->
                     <div class="input-card">
                         <div class="input-card-header">
                             <span class="header-icon">📖</span>
                             <div>
-                                <h3>교수님 강의 자료 & 예제 요약</h3>
-                                <p>수업 PPT 슬라이드, 요약 필기, 이론 설명을 넣으세요.</p>
+                                <h3>교수님 강의 자료 & 주차별 핵심 요약</h3>
+                                <p>위에서 주차를 선택해 자동 입력하거나, PDF 파일·필기를 추가하세요.</p>
                             </div>
                         </div>
 
@@ -91,48 +182,20 @@
                         <!-- 파일/링크 추출 상태 알림 바 -->
                         <div id="importStatusPill" class="import-status-pill hidden"></div>
 
-                        <textarea id="lectureNotes" class="exam-textarea" rows="8" placeholder="예시:&#10;1장: 컴퓨터의 기본 구조는 중앙처리장치(CPU), 주기억장치, 보조기억장치, 입출력장치로 구성된다.&#10;CPU 내부에는 산술논리연산장치(ALU), 제어장치(Control Unit), 레지스터가 존재한다.&#10;캐시 메모리는 CPU와 주기억장치 간의 속도 차이를 극복하기 위한 고속 버퍼 메모리이다."></textarea>
+                        <textarea id="lectureNotes" class="exam-textarea" rows="8" placeholder="상단 [선택 주차 강의요약 + 적중 예상족보 불러오기] 버튼을 누르면 1~7주차 492페이지 핵심 요약이 자동으로 채워집니다."></textarea>
                     </div>
 
-                    <!-- 입력 2: 학생참여 웹 연습문제 (족보) -->
+                    <!-- 입력 2: 말문제 오답 함정 & 예상문제 (족보) -->
                     <div class="input-card highlight-card">
                         <div class="input-card-header">
                             <span class="header-icon">🎯</span>
                             <div>
-                                <h3>학생참여 웹 이론 연습문제 <span class="hot-pill">★실제 출제 유력 족보★</span></h3>
-                                <p>교수님이 웹에 올리신 퀴즈와 정답을 그대로 복사해 넣으세요.</p>
+                                <h3>핵심 예상문제 & 말바꾸기 함정 족보 <span class="hot-pill">★중간고사 적중★</span></h3>
+                                <p>기준서 말바꾸기 오답 함정과 교안 필수 계산 예제가 자동 등록됩니다.</p>
                             </div>
                         </div>
 
-                        <!-- 참여 웹 퀴즈 링크 자동 추출 툴바 -->
-                        <div class="quick-import-toolbar">
-                            <button type="button" id="togglePracticeUrlBtn" class="btn-import-url" title="교수님 참여 웹페이지(예: dongwonlab.com)에서 퀴즈 자동 가져오기">
-                                <span>🔗 교수님 참여 웹 링크 가져오기 (dongwonlab 등)</span>
-                            </button>
-                        </div>
-
-                        <!-- 참여 웹 링크 입력 및 1~5주차 선택 팝업 바 (토글) -->
-                        <div id="practiceUrlInputRow" class="practice-url-panel hidden">
-                            <div class="dongwon-week-selector">
-                                <span class="week-selector-label">📅 추출할 주차 선택 <small>(복수 선택 가능)</small></span>
-                                <div id="dongwonWeekChips" class="week-chip-group">
-                                    <button type="button" class="week-chip active" data-week="all">전체 (1~5주차)</button>
-                                    <button type="button" class="week-chip" data-week="1주차">1주차</button>
-                                    <button type="button" class="week-chip" data-week="2주차">2주차</button>
-                                    <button type="button" class="week-chip" data-week="3주차">3주차</button>
-                                    <button type="button" class="week-chip" data-week="4주차">4주차</button>
-                                    <button type="button" class="week-chip" data-week="5주차">5주차</button>
-                                </div>
-                            </div>
-                            <div class="url-input-row">
-                                <input type="url" id="practiceWebUrlInput" placeholder="http://dongwonlab.com 또는 학생 모드 주소 입력" value="http://dongwonlab.com">
-                                <button type="button" id="fetchPracticeUrlBtn" class="btn-fetch-url">선택 주차 족보 추출</button>
-                            </div>
-                        </div>
-
-                        <div id="practiceImportStatusPill" class="import-status-pill hidden"></div>
-
-                        <textarea id="practiceProblems" class="exam-textarea" rows="8" placeholder="예시:&#10;[연습문제 1] CPU 내부에서 다음 실행할 명령어의 주소를 보관하는 레지스터는?&#10;정답: 프로그램 카운터(PC, Program Counter)&#10;&#10;[연습문제 2] 캐시 메모리의 사상 방식 3가지를 쓰시오.&#10;정답: 직접 사상, 연관 사상, 세트 연관 사상&#10;&#10;[연습문제 3] 다음 중 비휘발성 메모리에 해당하는 것은? 1.DRAM 2.SRAM 3.ROM 4.캐시&#10;정답: 3. ROM"></textarea>
+                        <textarea id="practiceProblems" class="exam-textarea" rows="8" placeholder="상단 [선택 주차 강의요약 + 적중 예상족보 불러오기] 버튼을 누르면 주차별 대표 말문제 함정 족보와 계산 예제가 자동으로 채워집니다."></textarea>
                     </div>
                 </div>
 
@@ -146,13 +209,13 @@
                             <div class="radio-group">
                                 <label class="radio-card active">
                                     <input type="radio" name="mode" value="hit_focus" checked>
-                                    <span class="radio-title">🎯 족보 적중 모드</span>
-                                    <span class="radio-desc">동원랩 족보 변형 없이 100% 원문 그대로 출제</span>
+                                    <span class="radio-title">🎯 족보 & 교안예제 적중 모드</span>
+                                    <span class="radio-desc">핵심 예상족보와 교안 계산 예제를 최우선 출제</span>
                                 </label>
                                 <label class="radio-card">
                                     <input type="radio" name="mode" value="comprehensive">
-                                    <span class="radio-title">📚 개념 심화 모드</span>
-                                    <span class="radio-desc">강의 자료 전체 이론을 골고루 출제</span>
+                                    <span class="radio-title">📚 기준서 말문제 심화 모드</span>
+                                    <span class="radio-desc">강의 요약 전 범위에서 새로운 말바꾸기 함정 응용 출제</span>
                                 </label>
                             </div>
                         </div>
@@ -162,8 +225,8 @@
                             <label class="option-label">문항 유형</label>
                             <div class="select-wrapper">
                                 <select id="questionTypes">
-                                    <option value="mix" selected>객관식 + 주관식 단답형 혼합 (실전형)</option>
-                                    <option value="multiple_choice">4~5지선다 객관식만 출제</option>
+                                    <option value="multiple_choice" selected>4지선다 객관식만 출제 (중급회계 말문제 추천)</option>
+                                    <option value="mix">객관식 + 주관식 단답형 혼합 (실전형)</option>
                                     <option value="subjective">주관식 단답형/용어 채우기만 출제</option>
                                 </select>
                             </div>
@@ -173,16 +236,16 @@
                         <div class="option-item">
                             <label class="option-label" for="examDifficulty">
                                 <span>시험 난이도</span>
-                                <span class="custom-badge hot-badge">암산 불가·실전형</span>
+                                <span class="custom-badge hot-badge">기준서 말바꾸기 특화</span>
                             </label>
                             <div class="select-wrapper">
                                 <select id="examDifficulty">
-                                    <option value="hard" selected>🔥 실전 대학시험 / 킬러 계산 (암산 불가·연습장 필수)</option>
-                                    <option value="standard">📚 표준 중간고사 (개념 응용 + 핵심 계산)</option>
-                                    <option value="basic">🌱 기본 점검 (기초 개념 및 원리)</option>
+                                    <option value="hard" selected>🔥 실전 중간고사 (기준서 말바꾸기 함정 + 교안 계산)</option>
+                                    <option value="standard">📚 표준 난이도 (핵심 정의 비교 + 기본 예제)</option>
+                                    <option value="basic">🌱 기본 점검 (기초 개념 및 OX 확인)</option>
                                 </select>
                             </div>
-                            <span class="option-hint-text">실제 교재 연습문제처럼 [자료/표] 제시형 다단계 계산과 함정 선지 출제</span>
+                            <span class="option-hint-text">K-IFRS 제1118호·제1008호·개념체계 말바꾸기 선지 및 단계별 해설 제공</span>
                         </div>
 
                         <!-- 문항 수 (직접 입력 & 퀵 프리셋) -->
