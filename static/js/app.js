@@ -496,6 +496,154 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    const readWeekNotesBtn = document.getElementById("readWeekNotesBtn");
+    const instantPracticeExamBtn = document.getElementById("instantPracticeExamBtn");
+    const selectedWeekNotesPanel = document.getElementById("selectedWeekNotesPanel");
+    const selectedWeekNotesTitle = document.getElementById("selectedWeekNotesTitle");
+    const selectedWeekNotesBody = document.getElementById("selectedWeekNotesBody");
+    const closeWeekNotesBtn = document.getElementById("closeWeekNotesBtn");
+    const startInstantFromNotesBtn = document.getElementById("startInstantFromNotesBtn");
+    const blockPresetBtns = document.querySelectorAll(".block-preset-btn");
+
+    // 3단계 추천 블록 버튼 클릭 시 해당 주차 칩 자동 선택 + 요약노트 즉시 열기
+    if (blockPresetBtns.length > 0) {
+        blockPresetBtns.forEach(btn => {
+            btn.addEventListener("click", async () => {
+                blockPresetBtns.forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                const targetWeeks = (btn.dataset.weeks || "").split(",").map(s => s.trim()).filter(Boolean);
+                iaWeekChips.forEach(chip => {
+                    if (targetWeeks.includes(chip.dataset.week)) {
+                        chip.classList.add("active");
+                    } else {
+                        chip.classList.remove("active");
+                    }
+                });
+                await openSelectedWeekNotes(targetWeeks);
+            });
+        });
+    }
+
+    function formatNotesToHtml(rawText) {
+        const escaped = rawText
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+        return escaped
+            .split("\n")
+            .map(line => {
+                const t = line.trim();
+                if (!t) return '<div class="note-spacer"></div>';
+                if (t.startsWith("[") && t.endsWith("]")) {
+                    return `<div class="note-sec-banner">${t}</div>`;
+                }
+                if (/^\d+\./.test(t)) {
+                    return `<div class="note-h4">${t}</div>`;
+                }
+                const highlighted = t
+                    .replace(/(★[^:：\n]+[:：]?)/g, '<span class="note-star">$1</span>')
+                    .replace(/('[^']+')/g, '<strong class="note-quote">$1</strong>');
+                return `<div class="note-bullet">${highlighted}</div>`;
+            })
+            .join("");
+    }
+
+    async function openSelectedWeekNotes(weeksOverride) {
+        const weeks = weeksOverride || getSelectedIaWeeks();
+        if (readWeekNotesBtn) {
+            readWeekNotesBtn.disabled = true;
+            readWeekNotesBtn.textContent = "⏳ 핵심요약 불러오는 중...";
+        }
+        try {
+            const resp = await fetch("/api/load-preset", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ weeks })
+            });
+            const data = await resp.json();
+            if (!resp.ok || !data.success) throw new Error(data.error || "요약 로드 실패");
+
+            lectureNotesInput.value = data.lecture_notes;
+            practiceProblemsInput.value = data.practice_problems;
+            if (data.subject && subjectNameInput) subjectNameInput.value = data.subject;
+
+            if (selectedWeekNotesPanel && selectedWeekNotesBody) {
+                selectedWeekNotesTitle.textContent = `📖 [${data.week_label}] 핵심 개념 & 말바꾸기 포인트 요약 (실전문제 ${data.quiz_count}문항 대기 중)`;
+                const cardsHtml = (data.week_notes_list || []).map(item => `
+                    <div class="week-note-card">
+                        <div class="week-note-card-head">
+                            <span class="week-note-badge">${item.week}</span>
+                            <strong>${item.title}</strong>
+                            <span class="week-note-qcount">기출·예상 ${item.quiz_count}문항</span>
+                        </div>
+                        <div class="week-note-card-content">
+                            ${formatNotesToHtml(item.lecture_notes)}
+                        </div>
+                    </div>
+                `).join("");
+                selectedWeekNotesBody.innerHTML = cardsHtml;
+                selectedWeekNotesPanel.classList.remove("hidden");
+                selectedWeekNotesPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            }
+            showPracticeImportStatus(`📖 [${data.week_label}] 핵심요약 노트가 열렸습니다! 눈으로 스캔한 뒤 [Step 2: 즉시 풀기]를 눌러보세요.`, "success");
+        } catch (err) {
+            showPracticeImportStatus(`❌ 요약 불러오기 오류: ${err.message}`, "error");
+        } finally {
+            if (readWeekNotesBtn) {
+                readWeekNotesBtn.disabled = false;
+                readWeekNotesBtn.textContent = "📖 [Step 1] 선택한 주차 핵심요약 노트 먼저 읽기";
+            }
+        }
+    }
+
+    async function launchInstantPracticeExam(weeksOverride) {
+        const weeks = weeksOverride || getSelectedIaWeeks();
+        if (instantPracticeExamBtn) {
+            instantPracticeExamBtn.disabled = true;
+            instantPracticeExamBtn.textContent = "⚡ 실전 기출문제 세팅 중...";
+        }
+        try {
+            const resp = await fetch("/api/load-preset", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ weeks })
+            });
+            const data = await resp.json();
+            if (!resp.ok || !data.success || !data.instant_exam) {
+                throw new Error(data.error || "기출문제 로드 실패");
+            }
+            lectureNotesInput.value = data.lecture_notes;
+            practiceProblemsInput.value = data.practice_problems;
+            if (data.subject && subjectNameInput) subjectNameInput.value = data.subject;
+
+            currentExam = data.instant_exam;
+            userAnswers = {};
+            startExamSession(currentExam);
+        } catch (err) {
+            alert(`오류 발생: ${err.message}`);
+        } finally {
+            if (instantPracticeExamBtn) {
+                instantPracticeExamBtn.disabled = false;
+                instantPracticeExamBtn.textContent = "⚡ [Step 2] 선택한 주차 실제 수업퀴즈·연습문제 0.1초 즉시 풀기";
+            }
+        }
+    }
+
+    if (readWeekNotesBtn) {
+        readWeekNotesBtn.addEventListener("click", () => openSelectedWeekNotes());
+    }
+    if (instantPracticeExamBtn) {
+        instantPracticeExamBtn.addEventListener("click", () => launchInstantPracticeExam());
+    }
+    if (startInstantFromNotesBtn) {
+        startInstantFromNotesBtn.addEventListener("click", () => launchInstantPracticeExam());
+    }
+    if (closeWeekNotesBtn && selectedWeekNotesPanel) {
+        closeWeekNotesBtn.addEventListener("click", () => {
+            selectedWeekNotesPanel.classList.add("hidden");
+        });
+    }
+
     if (loadIaPresetBtn) {
         loadIaPresetBtn.addEventListener("click", () => {
             loadIntermediateAccountingPreset(getSelectedIaWeeks());

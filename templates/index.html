@@ -124,16 +124,25 @@
                     </div>
                 </div>
 
-                <!-- ★ 중급회계1 1~7주차 원클릭 선택 패널 ★ -->
+                <!-- ★ 중급회계1 1~7주차 3단계 블록 학습 & 원클릭 선택 패널 ★ -->
                 <div class="preset-selector-card">
                     <div class="preset-selector-header">
                         <div>
-                            <h4>⚡ 중급회계1 (권성수 교수님 1~7주차 492p) 주차별 요약 & 예상족보 선택</h4>
-                            <p>공부할 주차를 선택하고 버튼을 누르면 <strong>강의 핵심 요약</strong>과 <strong>말바꾸기 함정 예상문제</strong>가 동시에 세팅됩니다.</p>
+                            <h4>⚡ 중급회계1 (권성수 교수님 1~7주차) 3단계 블록 격파 학습기</h4>
+                            <p>맨땅에 문제 풀지 마세요! <strong>① 블록/주차 선택 ➔ ② 핵심요약 노트 먼저 읽기 ➔ ③ 실제 수업퀴즈(62문항)+예상문제 즉시 풀기</strong> 순서로 정복하세요.</p>
                         </div>
                     </div>
+
+                    <!-- 추천 3단계 블록 원클릭 선택 -->
+                    <div class="block-preset-row">
+                        <span class="block-preset-label">🎯 추천 공부 코스:</span>
+                        <button type="button" class="block-preset-btn" data-weeks="1주차,2주차">🟢 1단계 워밍업 (1~2주차 · 13문항)</button>
+                        <button type="button" class="block-preset-btn" data-weeks="3주차,4주차,5주차">🟡 2단계 개념체계·현재가치 (3~5주차 · 40문항)</button>
+                        <button type="button" class="block-preset-btn" data-weeks="6주차,7주차">🔴 3단계 제1118호·유형자산 (6~7주차 · 34문항)</button>
+                    </div>
+
                     <div id="iaWeekChips" class="week-chip-group">
-                        <button type="button" class="week-chip active" data-week="all">전체 (1~7주차 전범위)</button>
+                        <button type="button" class="week-chip active" data-week="all">전체 (1~7주차 · 87문항)</button>
                         <button type="button" class="week-chip" data-week="1주차">1주차 (회계저울·자산분류)</button>
                         <button type="button" class="week-chip" data-week="2주차">2주차 (외감법·역선택·IFRS)</button>
                         <button type="button" class="week-chip" data-week="3주차">3주차 (개념체계·질적특성·자산)</button>
@@ -142,12 +151,31 @@
                         <button type="button" class="week-chip" data-week="6주차">6주차 (제1118호 손익5범주·상계)</button>
                         <button type="button" class="week-chip" data-week="7주차">7주차 (유동분류·MPM·유형자산)</button>
                     </div>
-                    <div class="preset-action-row">
+
+                    <div class="preset-action-row preset-step-grid">
+                        <button type="button" id="readWeekNotesBtn" class="btn-fetch-url btn-step-notes">
+                            📖 [Step 1] 선택한 주차 핵심요약 노트 먼저 읽기
+                        </button>
+                        <button type="button" id="instantPracticeExamBtn" class="btn-fetch-url btn-step-instant">
+                            ⚡ [Step 2] 선택한 주차 실제 수업퀴즈·연습문제 0.1초 즉시 풀기
+                        </button>
                         <button type="button" id="loadIaPresetBtn" class="btn-fetch-url btn-load-preset">
-                            📥 선택 주차 강의요약 + 적중 예상족보 불러오기
+                            🤖 [Step 3] 하단 입력창에 세팅 (AI 변형 모의고사 출제용)
                         </button>
                     </div>
                     <div id="practiceImportStatusPill" class="import-status-pill hidden"></div>
+
+                    <!-- ★ 선택한 주차 핵심요약 노트 인라인 리더기 (Step 1 클릭 시 오픈) ★ -->
+                    <div id="selectedWeekNotesPanel" class="selected-week-notes-panel hidden">
+                        <div class="selected-week-notes-header">
+                            <h5 id="selectedWeekNotesTitle">📖 선택 주차 핵심 개념 & 말바꾸기 포인트 요약</h5>
+                            <div class="selected-week-notes-actions">
+                                <button type="button" id="startInstantFromNotesBtn" class="btn-mini-instant">⚡ 다 읽었어요! 이 주차 문제 바로 풀기</button>
+                                <button type="button" id="closeWeekNotesBtn" class="btn-close-guide">✕ 닫기</button>
+                            </div>
+                        </div>
+                        <div id="selectedWeekNotesBody" class="selected-week-notes-body"></div>
+                    </div>
                 </div>
 
                 <!-- 2단 텍스트 입력창: 강의 자료 vs 핵심 예상 족보 -->

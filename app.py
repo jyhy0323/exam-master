@@ -1473,11 +1473,19 @@ def load_preset():
 
     notes_blocks = []
     quiz_blocks = []
+    week_notes_list = []
+    instant_questions = []
     quiz_idx = 1
 
     for wk in target_weeks:
         wdata = INTERMEDIATE_ACCOUNTING_WEEKS[wk]
         notes_blocks.append(wdata["lecture_notes"])
+        week_notes_list.append({
+            "week": wk,
+            "title": wdata["title"],
+            "lecture_notes": wdata["lecture_notes"],
+            "quiz_count": len(wdata["quizzes"])
+        })
         for q in wdata["quizzes"]:
             opt_str = "\n".join([f"  {i+1}. {opt}" for i, opt in enumerate(q["options"])])
             block = (
@@ -1487,10 +1495,37 @@ def load_preset():
                 f"[검증된 정답 및 해설]: {q['answer']}"
             )
             quiz_blocks.append(block)
+
+            formatted_opts = [f"{i+1}. {opt}" for i, opt in enumerate(q["options"])]
+            m_ans = re.search(r"정답\s*(\d+)번", q["answer"])
+            ans_idx = int(m_ans.group(1)) - 1 if m_ans else 0
+            if ans_idx < 0 or ans_idx >= len(formatted_opts):
+                ans_idx = 0
+
+            instant_questions.append({
+                "id": quiz_idx,
+                "type": "multiple_choice",
+                "question": q["question"],
+                "code_snippet": "",
+                "options": formatted_opts,
+                "correct_answer": formatted_opts[ans_idx],
+                "explanation": q["answer"],
+                "keywords": [],
+                "source_tag": f"{wk} 실전 기출/예상",
+                "difficulty": "실전 기출"
+            })
             quiz_idx += 1
 
     full_notes = "\n\n========================================\n\n".join(notes_blocks)
     full_quizzes = "\n\n".join(quiz_blocks)
+
+    instant_exam = {
+        "exam_title": f"중급회계1 [{week_label}] 실전 수업퀴즈(LearningX) & 연습문제 ({len(instant_questions)}문항)",
+        "subject": f"중급회계1 ({week_label})",
+        "total_questions": len(instant_questions),
+        "time_limit_minutes": 0,
+        "questions": instant_questions
+    }
 
     logging.info(f"📚 중급회계1 프리셋 로드 완료: {week_label} (예상문제 {quiz_idx - 1}문항)")
     return jsonify({
@@ -1501,7 +1536,9 @@ def load_preset():
         "subject": f"중급회계1 ({week_label} 중간고사 대비)",
         "title": f"중급회계1 핵심요약 & 말바꾸기 함정 족보 [{week_label}]",
         "lecture_notes": full_notes,
-        "practice_problems": full_quizzes
+        "practice_problems": full_quizzes,
+        "week_notes_list": week_notes_list,
+        "instant_exam": instant_exam
     })
 
 
