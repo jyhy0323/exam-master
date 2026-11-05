@@ -1860,3 +1860,43 @@ body {
 .note-quote {
     color: #6ee7b7;
 }
+
+
+/* 문항 클릭 즉시 채점 피드백 스타일 */
+.option-choice-btn.instant-correct {
+    border-color: #10b981 !important;
+    background: rgba(16, 185, 129, 0.18) !important;
+}
+.option-choice-btn.instant-wrong {
+    border-color: #f43f5e !important;
+    background: rgba(244, 63, 94, 0.18) !important;
+}
+.instant-feedback-box {
+    margin-top: 14px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+.instant-feedback-box.fb-correct {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #d1fae5;
+}
+.instant-feedback-box.fb-wrong {
+    background: rgba(244, 63, 94, 0.12);
+    border: 1px solid rgba(244, 63, 94, 0.4);
+    color: #ffe4e6;
+}
+.fb-header {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+}
+.fb-explanation {
+    color: #f1f5f9;
+}

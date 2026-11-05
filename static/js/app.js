@@ -876,23 +876,61 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
                 <h3 class="q-title">${escapeHtml(q.question)}</h3>
                 ${questionBodyHtml}
+                <div id="instantFeedback_${q.id}" class="instant-feedback-box hidden"></div>
             `;
 
             questionsContainer.appendChild(card);
         });
 
-        // 객관식 선택 이벤트 리스너 등록
+        // 객관식 선택 이벤트 리스너 등록 (클릭 즉시 정·오답 채점 및 해설 표시!)
         document.querySelectorAll(".option-choice-btn").forEach(btn => {
             btn.addEventListener("click", () => {
                 const qid = btn.getAttribute("data-qid");
                 const val = btn.getAttribute("data-val");
 
-                // 같은 카드의 다른 버튼 선택 해제
+                // 같은 카드의 다른 버튼 선택/정오답 스타일 초기화
                 const parent = btn.closest(".options-list");
-                parent.querySelectorAll(".option-choice-btn").forEach(b => b.classList.remove("selected"));
+                parent.querySelectorAll(".option-choice-btn").forEach(b => {
+                    b.classList.remove("selected", "instant-correct", "instant-wrong");
+                });
 
                 btn.classList.add("selected");
                 userAnswers[qid] = val;
+
+                // 현재 문항 객체 찾기 및 즉시 채점 피드백 표시
+                const qObj = (currentExam && currentExam.questions)
+                    ? currentExam.questions.find(item => String(item.id) === String(qid))
+                    : null;
+
+                if (qObj) {
+                    const correctAns = String(qObj.correct_answer || "").trim();
+                    const userAns = String(val || "").trim();
+                    const isCorrect = (userAns === correctAns || (correctAns.length >= 2 && userAns.slice(0, 2) === correctAns.slice(0, 2)));
+
+                    if (isCorrect) {
+                        btn.classList.add("instant-correct");
+                    } else {
+                        btn.classList.add("instant-wrong");
+                        parent.querySelectorAll(".option-choice-btn").forEach(b => {
+                            const bVal = String(b.getAttribute("data-val") || "").trim();
+                            if (bVal === correctAns || (correctAns.length >= 2 && bVal.slice(0, 2) === correctAns.slice(0, 2))) {
+                                b.classList.add("instant-correct");
+                            }
+                        });
+                    }
+
+                    const fbBox = document.getElementById(`instantFeedback_${qid}`);
+                    if (fbBox) {
+                        fbBox.className = `instant-feedback-box ${isCorrect ? 'fb-correct' : 'fb-wrong'}`;
+                        fbBox.innerHTML = `
+                            <div class="fb-header">
+                                <strong>${isCorrect ? '🟢 정답입니다!' : '🔴 아쉽네요, 오답입니다!'}</strong>
+                                <span>모범 정답: ${escapeHtml(correctAns)}</span>
+                            </div>
+                            <div class="fb-explanation">💡 <strong>해설:</strong> ${escapeHtml(qObj.explanation || '')}</div>
+                        `;
+                    }
+                }
 
                 // 카드 상태 업데이트
                 document.getElementById(`qCard_${qid}`).classList.add("answered");
@@ -1007,7 +1045,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!currentExam || !currentExam.questions) return;
 
         const questions = currentExam.questions;
-        enforceDongwonlabAnswersClient(questions);
         const totalQuestions = questions.length;
         const pointPerQ = Math.round((100.0 / totalQuestions) * 10) / 10;
         let correctCount = 0;
